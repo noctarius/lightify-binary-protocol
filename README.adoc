@@ -1,0 +1,544 @@
+= OSRAM Lightify Binary Protocol Documentation
+Christoph Engelbert <https://github.com/noctarius[@noctarius2k]>
+// Settings:
+:compat-mode!:
+:idseperator: -
+// Aliases:
+:project-name: OSRAM Lightify Binary Protocol
+:project-handle: osram-lightify-binary-protocol
+:toc:
+
+OSRAM
+link:https://www.osram.com/osram_com/tools-and-services/tools/lightify---smart-connected-light/[Lightify] is a smart home, connected lightning technology. Lights, switches and other paired devices are controlled using the Lightify gateway device. This gateway is an always-on, always-connected device which can be controlled using the official Lightify REST API on the Lightify Cloud. That, however, means that all commands need to be routed through the internet.
+
+The official Lightify app, on the other hand, communicates directly with the gateway and uses a proprietary binary protocol which is not publicly specified.
+
+This document is meant to create a public specification of the known facts about how to discover gateway devices, paired devices and zones/groups, as well as how to control those devices.
+
+== Disclaimer
+
+All information in this document are collected using *reverse engineering practices* or are available by other implementations / people on the internet. Certain *information might be incorrect, outdated or unspecific*. Any help completing this document is appreciated, please file pull requests.
+
+Using and/or implementing information in this document *might brick your device* or *may void your warranty*.
+
+The author is *not affiliated* to OSRAM Light AG in any way. Furthermore is this document *not official publicated or approved* by OSRAM Licht AG.
+
+== Basics about the Protocol
+
+The OSRAM Lightify gateway protocol is a binary protocol with a specified header.
+
+The underlying protocol is a persistent TCP connection which does not seem to support multiplexing, therefore multiple requests should be sent one after another. To support multithreading, multiple connections should be used.
+
+The TCP protocol works over port _4000_ and discovery can be implemented using mDNS (multicast DNS, aka Bonjour). Further information in <<Lightify Gateway Discovery>>.
+
+Multibyte values encoded using little-endian encoding and considered unsigned values.
+
+String values are encoded using link:https://en.wikipedia.org/wiki/Code_page_437[CP437 codepage] encoding and fixed length. Unused bytes are filled with _0x00_.
+
+=== Headers
+
+The protocol defines seems to define a common header for both requests and responses. The header consists of the packet's length, a packet type, the command id and a still unknown value (most probably reserved for later use).
+
+Furthermore the header contains a request id which is recommended, but not required, to be monotonly increasing (and wrapping around to startover when surpassing _65535_). The response will feature the same request id and can be used to assign responses to requests.
+
+.Packet Header
+|===
+| Byte(s) | Description | Possible values
+
+| 0-1
+| Length of the packet, incl header length
+| WORD: _0x00_ >= x <= _0xFFFF_
+
+| 2
+| Packet type
+| BYTE: enum -> +
+_0x00_: Light Device +
+_0x01_: Device response? +
+_0x02_: Broadcast +
+_0x03_: Zone Response?
+
+| 3
+| Command Id
+| BYTE: See <<Lightify Commands>>
+
+| 4-5
+| Unique, increasing request id
+| WORD: _0x00_ >= x <= _0xFFFF_
+
+| 6-7
+| Unknown
+| WORD: ???
+
+| 8
+| Error code?
+| BYTE: enum -> +
+_0x01_: No error
+_0x15_: Command cannot address a zone?
+_0xFF_: Unknown command?
+
+|===
+
+If the packet is not a broadcast (addressing type != _0x02_), the device or zone address header is following up right after the header. In case of a broadcast, the header is followed by the commands data. Addressing of specific zones or devices is defined in the following section.
+
+=== Error Response
+
+In case of an illegally addressed packet or any other type of error, an error response packet is returned from the gateway. The packet consists of the header only and the last byte seems to define an error code. See previous table for a list of known? error codes.
+
+== Device and Zone Addressing
+
+Each paired device has a unique address (MAC). Multiple paired devices can be controlled at once by adding them to zones / groups, which are addressed using the zone's id.
+
+An address always contains 8 byte, no matter it's adressing a device or zone and is directly followed by the command's specific data.
+
+.Addressing Header
+|===
+| Byte(s) | Description | Possible values
+
+| 8-15
+| Address
+| QWORD: See the following specification
+
+| 16-...
+| Command specific data
+| See <<Lightify Commands>>
+
+|===
+
+=== Device address
+
+Devices are addressed by, what seems to be, a hardware address, similar to MAC addresses used in networking devices.
+
+.Device Addressing
+|===
+| Byte(s) | Description | Possible values
+
+| 0-7
+| Device address
+| QWORD
+
+|===
+
+While discovering devices the device's address is made known to the application, controlling the gateway, and the paired device can be addressed directly (whereas the command packet is still routed through the gateway).
+
+*Attention:* Device addresses are transmitted as 8 bytes, not as strings!
+
+=== Zone address
+
+Zones are identified by their zone id. Addressing itself, however, is still using 8 bytes, even if zone ids seem to be limited to _0xFFFF_. That said, the addressing is built as following:
+
+.Zone Addressing
+|===
+| Byte | values
+
+| 1
+| BYTE: lower significant byte
+
+| 2
+| BYTE: higher significant byte
+
+| 3-7
+| BYTE[6]: _0x00_
+
+|===
+
+== Lightify Commands
+
+Lightify commands are either used for broadcasts, like device or zone discovery, or contain information to control a specfic device or zone.
+
+The following table is most probably incomplete and more commands are available. Response packets often follow a very similar scheme, therefore it should be easy to find new packets and analyze their content.
+
+Known command ids are put into the following list:
+
+.Commands
+|===
+| Command Id | Description | Zone Broadcast | Packet Definition
+
+| _0x13_
+| List paired devices
+| _true_
+| <<PACKET_LIST_PAIRED_DEVICES>>
+
+| _0x1E_
+| List configured zones
+| _true_
+| <<PACKET_LIST_ZONES>>
+
+| _0x26_
+| Get zone information
+| _false_
+| <<PACKET_GET_ZONE_INFO>>
+
+| _0x31_
+| Set luminance of light or zone
+| _false_
+| <<PACKET_SET_LUMINANCE>>
+
+| _0x32_
+| Set power switch on/off
+| _false_
+| <<PACKET_SET_SWITCH>>
+
+| _0x33_
+| Set white light temperature
+| _false_
+| <<PACKET_SET_TEMPERATURE>>
+
+| _0x36_
+| Set light color (RGB)
+| _false_
+| <<PACKET_SET_COLOR>>
+
+| _0x68_
+| Get device information
+| _false_
+| <<PACKET_GET_DEVICE_INFO>>
+
+|===
+
+As visible from the list, a lot of command ids seem either unused or, what is more presumable, unknown at the current point in time.
+
+== Command data
+
+Most commands carry additional information starting after the header (for broadcast packets) or after the addressing header (non-broadcast packets).
+
+The following sections define the packet's structure after either of both headers, according to the command type.
+
+=== PACKET_LIST_PAIRED_DEVICES
+
+Returns a list of all paired devices.
+
+.Request data
+|===
+| Byte(s) | Description | Possible values
+
+| 16
+| Unknown
+| BYTE: always? _0x01_
+
+|===
+
+.Response data
+|===
+| Byte(s) | Description | Possible values
+
+| 9-10
+| Number of devices
+| WORD: _0x00_ >= x <= _0xFFFF_
+
+| ...50 bytes each device
+| Device status information
+| See following table
+
+|===
+
+.Device status information
+|===
+| Byte(s) | Description | Possible values
+
+| 0-1
+| Device id?
+| WORD: _0x00_ >= x <= 0xFFFF
+
+| 2-9
+| Device address
+| QWORD: See <<Device address>>
+
+| 10
+| Device type?
+| BYTE: <<Device Types>>
+
+| 11-14
+| Firmware version?
+| DWORD: ???
+
+| 15
+| Device online
+| BYTE: enum -> +
+_0x00_: offline +
+_0x01_: online
+
+| 16-17
+| Zone Id?
+| WORD: ???
+
+| 18
+| Power switch status
+| BYTE: enum -> +
+_0x00_: off +
+_0x01_: on
+
+| 19
+| Luminance value
+| BYTE: _0x00_ >= x <= _0xFF_
+
+| 20-21
+| Temparature value (in Kelvin)
+| WORD: _2,000_ >= x <= _6,500_
+
+| 22
+| Red value
+| BYTE: _0x00_ >= x <= _0xFF_
+
+| 23
+| Green value
+| BYTE: _0x00_ >= x <= _0xFF_
+
+| 24
+| Blue value
+| BYTE: _0x00_ >= x <= _0xFF_
+
+| 25
+| Alpha value
+| BYTE: always? _0xFF_
+
+| 26-49
+| Device name
+| BYTE[24]: CP437 encoded, zero terminated string
+
+|===
+
+
+=== PACKET_LIST_ZONES
+
+Returns a list of all configured zones.
+
+.Request data
+|===
+| Byte(s) | Description | Possible values
+
+| -
+| No additional information to send
+| -
+
+|===
+
+.Response data
+|===
+| Byte(s) | Description | Possible values
+
+| 9-10
+| Number of zones
+| WORD: _0x00_ >= x <= _0xFFFF_
+
+| ...18 bytes each zone
+| Zone information
+| See following table
+
+|===
+
+.Zone information
+|===
+| Byte(s) | Description | Possible values
+
+| 0-1
+| Zone id
+| WORD: _0x00_ >= x <= 0xFFFF
+
+| 2-17
+| Zone name
+| BYTE[16]: CP437 encoded, zero terminated string
+
+|===
+
+Assigned devices need to be discovered using <<PACKET_GET_ZONE_INFO>> after the zone id has been seen with this packet.
+
+=== PACKET_GET_ZONE_INFO
+
+Returns information about the requested zone, including assigned devices.
+
+.Request data
+|===
+| Byte(s) | Description | Possible values
+
+| -
+| No additional information to send
+| -
+
+|===
+
+.Response data
+|===
+| Byte(s) | Description | Possible values
+
+| 9-10
+| Zone id
+| DWORD: _0x00_ >= x <= _0xFFFF_
+
+| 11-27
+| Zone name
+| BYTE[16]: CP437 encoded, zero terminated string
+
+| 28
+| Number of assigned devices
+| BYTE: _0x00_ >= x <= _0xFF_
+
+| ...8 bytes each device
+| Device addresses
+| See <<Device address>>
+
+|===
+
+=== PACKET_SET_LUMINANCE
+
+Sets the luminance value of the addressed device or zone.
+
+.Request data
+|===
+| Byte(s) | Description | Possible values
+
+| 16
+| Luminance value
+| BYTE: 0x00 >= x <= 0xFF
+
+| 17-18
+| Transition time in millis
+| WORD: 0x00 >= x <= 0xFFFF
+
+|===
+
+.Response data
+|===
+| Byte(s) | Description | Possible values
+
+| 9-10
+| Devide or zone id
+| DWORD: _0x00_ >= x <= _0xFFFF_
+
+| 11-18
+| Device or zone address
+| QWORD: See <<Device and Zone Addressing>>
+
+|===
+
+=== PACKET_SET_SWITCH
+
+Sets the power switch state of the addressed device or zone.
+
+.Request data
+|===
+| Byte(s) | Description | Possible values
+
+| 16
+| Power switch state
+| BYTE: enum -> +
+_0x00_: off +
+_0x01_: on
+
+|===
+
+.Response data
+|===
+| Byte(s) | Description | Possible values
+
+| 9-10
+| Devide or zone id
+| DWORD: _0x00_ >= x <= _0xFFFF_
+
+| 11-18
+| Device or zone address
+| QWORD: See <<Device and Zone Addressing>>
+
+|===
+
+=== PACKET_SET_TEMPERATURE
+
+Sets the white light temperature of the addressed device or zone between 2,000 and 6,500 Kelvin.
+
+.Request data
+|===
+| Byte(s) | Description | Possible values
+
+| 16
+| White light temperature
+| WORD: _2,000_ >= x <= _6,500_
+
+| 17-18
+| Transition time in millis
+| WORD: 0x00 >= x <= 0xFFFF
+
+|===
+
+.Response data
+|===
+| Byte(s) | Description | Possible values
+
+| 9-10
+| Devide or zone id
+| DWORD: _0x00_ >= x <= _0xFFFF_
+
+| 11-18
+| Device or zone address
+| QWORD: See <<Device and Zone Addressing>>
+
+|===
+
+=== PACKET_GET_DEVICE_INFO
+
+Returns information about the requested device.
+
+.Request data
+|===
+| Byte(s) | Description | Possible values
+
+| -
+| No additional information to send
+| -
+
+|===
+
+.Response data
+|===
+| Byte(s) | Description | Possible values
+
+
+| 9-10
+| Device id?
+| WORD: _0x00_ >= x <= 0xFFFF
+
+| 11-18
+| Device address
+| QWORD: See <<Device address>>
+
+| 19
+| Unknown
+| BYTE: ???
+
+| 20
+| Unknown
+| BYTE: ???
+
+| 21
+| Power switch status
+| BYTE: enum -> +
+_0x00_: off +
+_0x01_: on
+
+| 22
+| Luminance value
+| BYTE: _0x00_ >= x <= _0xFF_
+
+| 23-24
+| Temparature value (in Kelvin)
+| WORD: _2,000_ >= x <= _6,500_
+
+| 25
+| Red value
+| BYTE: _0x00_ >= x <= _0xFF_
+
+| 26
+| Green value
+| BYTE: _0x00_ >= x <= _0xFF_
+
+| 27
+| Blue value
+| BYTE: _0x00_ >= x <= _0xFF_
+
+| 28
+| Alpha value
+| BYTE: always? _0xFF_
+
+| 29-31
+| Unknown
+| BYTE[3]: ???
+
+|===
