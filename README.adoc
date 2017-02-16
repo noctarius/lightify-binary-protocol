@@ -33,7 +33,7 @@ The TCP protocol works over port _4000_ and discovery can be implemented using m
 
 Multibyte values encoded using little-endian encoding and considered unsigned values.
 
-String values are encoded using link:https://en.wikipedia.org/wiki/Code_page_437[CP437 codepage] encoding and fixed length. Unused bytes are filled with _0x00_.
+String values are encoded using UTF-8 encoding and of fixed length. Unused bytes are filled with _0x00_.
 
 === Headers
 
@@ -50,7 +50,7 @@ Furthermore the header contains a request id which is recommended, but not requi
 | WORD: _0x00_ >= x <= _0xFFFF_
 
 | 2
-| Packet type
+| Packet type (flag)
 | BYTE: enum -> +
 _0x00_: Light Device +
 _0x01_: Device response? +
@@ -72,8 +72,15 @@ _0x03_: Zone Response?
 | 8
 | Error code?
 | BYTE: enum -> +
-_0x01_: No error
-_0x15_: Command cannot address a zone?
+_0x00_: No error? +
+_0x01_: Wrong parameter? +
+_0x14_: ? +
+_0x15_: Command cannot address a zone? +
+_0x16_: ? +
+_0xA7_: ? +
+_0x0B_: ? +
+_0xC2_: ? +
+_0xD1_: ? +
 _0xFF_: Unknown command?
 
 |===
@@ -83,6 +90,33 @@ If the packet is not a broadcast (addressing type != _0x02_), the device or zone
 === Error Response
 
 In case of an illegally addressed packet or any other type of error, an error response packet is returned from the gateway. The packet consists of the header only and the last byte seems to define an error code. See previous table for a list of known? error codes.
+
+== Device Types
+
+The OSRAM Lightify gateway uses the Zigbee Light Link communication protocol, however it is also able to communicate with certain other device types of the Lightify series, such as switches, motion sensors and power plugs / sockets.
+
+A device type is sent with status updates to identify the type of the device as well as the capabilities of a specific device.
+
+.Device Type
+|===
+| Id | Description
+
+| 10
+| Lightify bulb
+
+| 16
+| Plug / Power socket
+
+| 32
+| Motion Sensor
+
+| 64
+| Switch
+
+| 65
+| Switch
+
+|===
 
 == Device and Zone Addressing
 
@@ -151,47 +185,506 @@ Known command ids are put into the following list:
 
 .Commands
 |===
-| Command Id | Description | Zone Broadcast | Packet Definition
+| Command Id | Description | Broadcast | Addressing | Packet Definition
+
+| _0x02_
+| short packet, missing error code in header - ping pong?
+| true
+|
+|
+
+| _0x0A_
+| short packet
+| true
+|
+|
+
+| _0x0B_
+| short packet (0x00 -> error 0x01)
+| true
+|
+|
 
 | _0x13_
 | List paired devices
 | _true_
+| BROADCAST
 | <<PACKET_LIST_PAIRED_DEVICES>>
+
+| _0x15_
+| short packet
+| true
+|
+|
+
+| _0x16_
+| error code 15 (wrong addressing)
+| false?
+| ZONE?, DEVICE?
+|
+
+| _0x18_
+| Unknown, no error code returned, activate device search?
+| true?
+| BROADCAST?
+|
+
+| _0x1C_
+| Unknown, short packet
+| true
+|
+|
+
+| _0x1D_
+| Unknown, short packet
+| true
+|
+|
 
 | _0x1E_
 | List configured zones
 | _true_
+| BROADCAST
 | <<PACKET_LIST_ZONES>>
+
+| _0x1F_
+| Unknown, actual content returned (WORD(0,0))
+| true
+| BROADCAST
+|
+
+| _0x20_
+| Save Zone
+| false
+| ZONE?
+|
+
+| _0x21_
+| Unknown, wrong addressing
+| false
+| ZONE?, DEVICE?
+|
 
 | _0x26_
 | Get zone information
 | _false_
+| ZONE
 | <<PACKET_GET_ZONE_INFO>>
+
+| _0x27_
+| Unknown, wrong addressing
+| false
+| ZONE?, DEVICE?
+|
+
+| _0x28_
+| Unknown, wrong addressing
+| false
+| ZONE?, DEVICE?
+|
+
+| _0x29_ (long empty response with 1 byte data)
+| Unknown, unknown error code 0x16 (not enough data?)
+| true
+|
+|
 
 | _0x31_
 | Set luminance of light or zone
 | _false_
+| ZONE, DEVICE
 | <<PACKET_SET_LUMINANCE>>
 
 | _0x32_
 | Set power switch on/off
 | _false_
+| ZONE, DEVICE
 | <<PACKET_SET_SWITCH>>
 
 | _0x33_
 | Set white light temperature
 | _false_
+| ZONE, DEVICE
 | <<PACKET_SET_TEMPERATURE>>
+
+| _0x34_
+| Unknown, wrong addressing
+| false
+| ZONE?, DEVICE?
+|
 
 | _0x36_
 | Set light color (RGB)
 | _false_
+| ZONE, DEVICE
 | <<PACKET_SET_COLOR>>
+
+| _0x37_
+| Unknown, wrong addressing
+| false
+| ZONE?, DEVICE?
+|
+
+| _0x38_
+| Unknown, wrong addressing
+| false
+| ZONE?, DEVICE?
+|
+
+| _0x51_
+| Unknown, wrong addressing
+| false
+| ZONE?, DEVICE?
+|
+
+| _0x52_
+| Activate scene
+| _false_
+| ZONE, DEVICE
+| <<PACKET_ACTIVATE_SCENE>>
+
+| _0x53_
+| Unknown, wrong addressing
+| false
+| ZONE?, DEVICE?
+|
+
+| _0x54_
+| Unknown, returned actual data (WORD(0,0))
+| true
+| BROADCAST
+|
+
+| _0x55_
+| Unknown, wrong addressing
+| false
+| ZONE?, DEVICE?
+|
+
+| _0x56_
+| Unknown, wrong addressing
+| false
+| ZONE?, DEVICE?
+|
+
+| _0x57_
+| Unknown, wrong addressing
+| false
+| ZONE?, DEVICE?
+|
+
+| _0x58_
+| Unknown, wrong addressing
+| false
+| ZONE?, DEVICE?
+|
+
+| _0x61_
+| Unknown, retured unknown error code 0xD1
+|
+|
+|
+
+| _0x62_
+| Unknown, retured unknown error code 0xD1
+|
+|
+|
+
+| _0x63_
+| Unknown, retured unknown error code 0xD1
+|
+|
+|
+
+| _0x64_
+| Unknown, wrong addressing
+| false
+| ZONE?, DEVICE?
+|
+
+| _0x66_
+| Unknown, wrong addressing
+| false
+| ZONE?, DEVICE?
+|
+
+| _0x67_
+| Unknown, wrong addressing
+| false
+| ZONE?, DEVICE?
+|
 
 | _0x68_
 | Get device information
 | _false_
+| DEVICE
 | <<PACKET_GET_DEVICE_INFO>>
+
+| _0x6A_
+| Unknown, retured unknown error code 0xD1
+|
+|
+|
+
+| _0x6B_
+| Unknown, retured unknown error code 0xD1
+|
+|
+|
+
+| _0x6D_
+| Unknown, retured unknown error code 0xD1
+|
+|
+|
+
+| _0x6F_
+| Unknown, retured unknown error code 0x16 <- gateway firmware?
+|
+|
+|
+
+| _0x70_
+| Unknown, wrong addressing
+| false
+| ZONE?, DEVICE?
+|
+
+| _0x71_
+| Unknown, wrong addressing
+| false
+| ZONE?, DEVICE?
+|
+
+| _0x76_
+| Unknown, wrong addressing
+| false
+| ZONE?, DEVICE?
+|
+
+| _0x79_
+| Unknown, wrong addressing
+| false
+| ZONE?, DEVICE?
+|
+
+| _0x7A_
+| Unknown, wrong addressing
+| false
+| ZONE?, DEVICE?
+|
+
+| _0x7B_
+| Unknown, retured unknown error code 0x16
+|
+|
+|
+
+| _0x7C_
+| Unknown, retured unknown error code 0x15 (with one byte data)
+|
+|
+|
+
+| _0x7D_ (no return with one byte data, firmware update?)
+| Unknown, retured unknown error code 0x16
+|
+|
+|
+
+| _0x91_ (error 0xC2 with one byte data)
+| Unknown, retured unknown error code 0xA7
+|
+|
+|
+
+| _0xC0_
+| Unknown, short packet
+| true
+|
+|
+
+| _0xC1_
+| Unknown, short packet
+| true
+|
+|
+
+| _0xC3_
+| Unknown, wrong addressing
+| false
+| ZONE?, DEVICE?
+|
+
+| _0xC4_
+| Unknown, wrong addressing
+| false
+| ZONE?, DEVICE?
+|
+
+| _0xC6_
+| Unknown, short packet
+| true
+|
+|
+
+| _0xC7_
+| Unknown, wrong addressing
+| false
+| ZONE?, DEVICE?
+|
+
+| _0xC8_
+| Unknown, wrong addressing
+| false
+| ZONE?, DEVICE?
+|
+
+| _0xD0_
+| Unknown, retured unknown error code 0xD1
+|
+|
+|
+
+| _0xD1_
+| Unknown, no response, system reset?
+|
+|
+|
+
+| _0xD2_
+| Unknown, no answer (0x00)
+|
+|
+|
+
+| _0xD3_
+| Unknown, no answer (0x00)
+|
+|
+|
+
+| _0xD4_
+| Unknown, no answer (0x00)
+|
+|
+|
+
+| _0xD5_
+| Unknown, no answer (0x00)
+|
+|
+|
+
+| _0xD6_
+| Unknown, retured unknown error code 0x15
+|
+|
+|
+
+| _0xD8_
+| Unknown, retured unknown error code 0x15
+|
+|
+|
+
+| _0xD9_
+| Unknown, retured unknown error code 0x15
+|
+|
+|
+
+| _0xDA_
+| Unknown, retured unknown error code 0x15
+|
+|
+|
+
+| _0xDB_
+| Unknown, retured unknown error code 0x15
+|
+|
+|
+
+| _0xDC_
+| Unknown, retured unknown error code 0x15
+|
+|
+|
+
+| _0xD0_
+| Unknown, no error (0x00)
+|
+|
+|
+
+| _0xE1_
+| Unknown, wrong addressing
+| false
+| ZONE?, DEVICE?
+|
+
+| _0xE2_
+| Unknown, no data returned, no error, what's that?
+| true
+| BROADCAST
+|
+
+
+| _0xE3_
+| Get Wifi Configuration
+| true
+| BROADCAST
+| <<PACKET_GET_WIFI_CONFIGURATION>>
+
+| _0xE4_
+| Unknown, short packet
+| true
+|
+|
+
+| _0xE5_
+| Unknown, returned actual data (QWORD(0,0,0,0))
+| true
+| BROADCAST
+|
+
+| _0xE6_
+| Unknown, returned actual data (WORD(1,15))
+| true
+| BROADCAST
+|
+
+| _0xE6_
+| Unknown, returned actual data (WORD(1,15))
+| true
+| BROADCAST
+|
+
+| _0xE7_
+| Unknown, no data returned, no error, what's that?
+| true
+| BROADCAST
+|
+
+| _0xE8_
+| Unknown, retured unknown error code 0x16
+|
+|
+|
+
+| _0xE9_
+| Unknown, retured unknown error code 0xD1
+|
+|
+|
+
+| _0xEA_
+| Unknown, retured unknown error code 0xD1
+|
+|
+|
 
 |===
 
@@ -247,19 +740,14 @@ Returns a list of all paired devices.
 | Device type?
 | BYTE: <<Device Types>>
 
-| 11-14
-| Firmware version?
-| DWORD: ???
-
-| 15
-| Device online
-| BYTE: enum -> +
-_0x00_: offline +
-_0x01_: online
+| 11-15
+| Firmware version
+| BYTE[5]: Translation into firmware version string -> +
+{%02d, BYTE[0]}+{%02d, BYTE[1]}+{%02d, BYTE[2]}+BYTE[3]+BYTE[4]
 
 | 16-17
-| Zone Id?
-| WORD: ???
+| Zone Id
+| WORD: _0x00_ >= x <= _0xFFFF_
 
 | 18
 | Power switch status
@@ -336,7 +824,7 @@ Returns a list of all configured zones.
 
 | 2-17
 | Zone name
-| BYTE[16]: CP437 encoded, zero terminated string
+| BYTE[16]: UTF-8 encoded, zero terminated string
 
 |===
 
@@ -366,7 +854,7 @@ Returns information about the requested zone, including assigned devices.
 
 | 11-27
 | Zone name
-| BYTE[16]: CP437 encoded, zero terminated string
+| BYTE[16]: UTF-8 encoded, zero terminated string
 
 | 28
 | Number of assigned devices
@@ -472,6 +960,34 @@ Sets the white light temperature of the addressed device or zone between 2,000 a
 
 |===
 
+=== PACKET_ACTIVATE_SCENE
+
+Activates a predefined scene on the addressed device or zone.
+
+.Request data
+|===
+| Byte(s) | Description | Possible values
+
+| 16-17
+| Scene id
+| WORD: _0x00_  >= x <= _0xFFFF_
+
+|===
+
+.Response data
+|===
+| Byte(s) | Description | Possible values
+
+| 9-10
+| Devide or zone id
+| DWORD: _0x00_ >= x <= _0xFFFF_
+
+| 11-18
+| Device or zone address
+| QWORD: See <<Device and Zone Addressing>>
+
+|===
+
 === PACKET_GET_DEVICE_INFO
 
 Returns information about the requested device.
@@ -540,5 +1056,83 @@ _0x01_: on
 | 29-31
 | Unknown
 | BYTE[3]: ???
+
+|===
+
+
+=== PACKET_GET_WIFI_CONFIGURATION
+
+Retrieves or configures the wifi configuration.
+
+.Request data
+|===
+| Byte(s) | Description | Possible values
+
+| 16
+| Subcommand
+| BYTE: -> +
+_0x00_: Get wifi configuration +
+_0x01_: Set wifi configuration +
+_0x03_: Scan wifi configuration
+
+|===
+
+.Response data
+|===
+| Byte(s) | Description | Possible values
+
+| 9
+| Number of profiles
+| Byte: _0x00_ >= x <= _0xFF_
+
+| ...97 bytes each profile
+| Profile information
+| See following table
+
+|===
+
+.Profile information
+|===
+| Byte(s) | Description | Possible values
+
+| 0-31
+| Profile Name
+| BYTE[32]: UTF-8 encoded, zero terminated string
+
+| 32-64
+| SSID
+| BYTE[33]: UTF-8 encoded, zero terminated string
+
+| 65-70
+| BSSID
+| BYTE[6]: UTF-8 encoded, zero terminated string
+
+| 71-74
+| Channel
+| DWORD
+
+| 75-76
+| Unknown
+| WORD: ???
+
+| 77-80
+| IP Address
+| QWORD: 4 bytes of IP address
+
+| 81-84
+| Gateway
+| QWORD: 4 bytes of IP address
+
+| 85-88
+| Netmask
+| QWORD: 4 bytes of IP address
+
+| 89-92
+| DNS #1
+| QWORD: 4 bytes of IP address
+
+| 93-96
+| DNS #2
+| QWORD: 4 bytes of IP address
 
 |===
