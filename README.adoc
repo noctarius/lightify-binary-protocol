@@ -171,6 +171,20 @@ Zones are identified by their zone id. Addressing itself, however, is still usin
 
 |===
 
+== Lightify Gateway Discovery
+
+To discover the OSRAM Lightify gateway's IP address, a link:https://en.wikipedia.org/wiki/Multicast_DNS[mDNS (multicast DNS)] request is used. mDNS is also known as Bonjour and is originally developed by Apple.
+
+To find the gateway's address a SSDP lookup request is sent to the UDP broadcast address _224.0.0.251_ (IPv4) or _FF02::FB_ (IPv6). The service type to search for is `_http._tcp` which will find a Lightify device named as `Lightify-XXXXXXXX`, where `XXXXXXXX` is a part of the gateway's serial number (`S/N: OSRXXXXXXXX-YY`) which is also used in the gateway's own SSID (last 6 numbers of the code).
+
+Since more items, especially of other vendors, might be found, the instance name should be tested for starting with `Lightify-` to make sure only the Lightify gateway is discovered.
+
+According to the search type and the mDNS response, there is supposed to be a HTTP service on port 80, which does not seem to exist. However, the gateway seems to communicate over link:https://en.wikipedia.org/wiki/QUIC[QUIC] to the OSRAM servers, so maybe the port 80 is also available using QUIC.
+
+After discovering the gateway's IP address, the communication port to use the described protocol is TCP/4000.
+
+Lightify devices and zones will be discovered using the gateway binary protocol, using tge commands <<PACKET_LIST_PAIRED_DEVICES>> and <<PACKET_LIST_ZONES>>.
+
 == Lightify Commands
 
 Lightify commands are either used for broadcasts, like device or zone discovery, or contain information to control a specfic device or zone.
