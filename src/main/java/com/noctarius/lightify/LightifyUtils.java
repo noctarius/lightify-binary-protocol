@@ -1,3 +1,5 @@
+package com.noctarius.lightify;
+
 import javax.jmdns.ServiceInfo;
 import java.util.concurrent.Callable;
 

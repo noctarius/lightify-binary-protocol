@@ -1,19 +1,35 @@
+package com.noctarius.lightify;
+
 import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+
+import static com.noctarius.lightify.Command.LIGHT_COLOR;
+import static com.noctarius.lightify.Command.LIGHT_LUMINANCE;
+import static com.noctarius.lightify.Command.LIGHT_SWITCH;
+import static com.noctarius.lightify.Command.LIGHT_TEMPERATURE;
+import static com.noctarius.lightify.Command.STATUS_ALL;
+import static com.noctarius.lightify.Command.STATUS_SINGLE;
+import static com.noctarius.lightify.Command.ZONE_INFO;
+import static com.noctarius.lightify.Command.ZONE_LIST;
+import static com.noctarius.lightify.LightifyUtils.exceptional;
 
 public class LightifyLink {
 
-    private static final Charset CP437 = Charset.forName("cp437");
+    private static final Charset UTF8 = Charset.forName("UTF-8");
 
     private final AtomicInteger sequencer = new AtomicInteger();
     private final Map<String, LightifyLuminary> devices = new ConcurrentHashMap<>();
@@ -32,6 +48,76 @@ public class LightifyLink {
         this.input = exceptional(socket::getInputStream);
     }
 
+    public void perform(byte command) {
+        perform(command, null);
+    }
+
+    public void perform(byte command, byte[] data) {
+        byte[] packet = new PacketBuilder(this).on(command).data(data).build();
+        sendPacket(packet);
+        readPacket(this::handlePacket, null);
+    }
+
+    private void handlePacket(ByteBuffer buffer, Consumer<LightifyLuminary> consumer) {
+        System.out.println("");
+        System.out.println("Header:");
+        System.out.println("\tLength: " + (buffer.limit() + 2));
+        System.out.println("\tPacket type: 0x" + Integer.toHexString(Byte.toUnsignedInt(buffer.get())));
+        System.out.println("\tCommand type: 0x" + Integer.toHexString(Byte.toUnsignedInt(buffer.get())));
+        System.out.println("\tRequest id: " + (Integer.toUnsignedString(buffer.getInt())));
+        if (buffer.limit() >= 7) {
+            System.out.println("\tError code: 0x" + Integer.toHexString(Byte.toUnsignedInt(buffer.get())));
+        } else {
+            System.out.println("!!!Short packet!!!");
+        }
+
+        if (buffer.hasRemaining()) {
+            System.out.println("Data:");
+            System.out.println("Size: " + buffer.remaining());
+            byte[] data = new byte[buffer.remaining()];
+            System.arraycopy(buffer.array(), buffer.position(), data, 0, data.length);
+            System.out.println(DatatypeConverter.printHexBinary(data));
+            System.out.println(Arrays.toString(data));
+
+            //System.out.println("Status: 0x" + Integer.toHexString(Byte.toUnsignedInt(buffer.get()))); // 1
+
+            /*int profileCount = Byte.toUnsignedInt(buffer.get()); // 2
+            System.out.println("ProfileCount: " + profileCount);
+            for (int i = 0; i < profileCount; i++) {
+                byte[] name = new byte[32];
+                buffer.get(name);
+                System.out.println("Name: " + new String(name, UTF8).trim());
+                byte[] ssid = new byte[33];
+                buffer.get(ssid);
+                System.out.println("SSID: " + new String(ssid, UTF8).trim());
+                byte[] bssid = new byte[6];
+                buffer.get(bssid);
+                System.out.println("BSSID: " + new String(bssid, UTF8).trim());
+                System.out.println("Channel: " + buffer.getInt());
+                System.out.println("Unk1: " + Byte.toUnsignedInt(buffer.get()));
+                System.out.println("Unk2: " + Byte.toUnsignedInt(buffer.get()));
+                byte[] addr = new byte[4];
+                buffer.get(addr);
+                InetAddress address = exceptional(() -> Inet4Address.getByAddress(addr));
+                System.out.println("IP: " + address.getHostAddress());
+                buffer.get(addr);
+                address = exceptional(() -> Inet4Address.getByAddress(addr));
+                System.out.println("Gateway: " + address.getHostAddress());
+                buffer.get(addr);
+                address = exceptional(() -> Inet4Address.getByAddress(addr));
+                System.out.println("Netmask: " + address.getHostAddress());
+                buffer.get(addr);
+                address = exceptional(() -> Inet4Address.getByAddress(addr));
+                System.out.println("DNS1: " + address.getHostAddress());
+                buffer.get(addr);
+                address = exceptional(() -> Inet4Address.getByAddress(addr));
+                System.out.println("DNS2: " + address.getHostAddress());
+            }*/
+        }
+        System.out.println("");
+        System.out.println("");
+    }
+
     public LightifyLuminary findDevice(String address) {
         return devices.get(address);
     }
@@ -43,27 +129,27 @@ public class LightifyLink {
     public void performSearch(Consumer<LightifyLuminary> consumer) {
         byte[] packet = new PacketBuilder(this).on(STATUS_ALL).data(new byte[]{0x01}).build();
         sendPacket(packet);
-        readPacket(STATUS_ALL, consumer);
+        readPacket(this::handleStatusAll, consumer);
 
         packet = new PacketBuilder(this).on(ZONE_LIST).build();
 
-        logger.debug("Searching Zones...");
+        System.out.println("Searching Zones...");
         sendPacket(packet);
-        readPacket(ZONE_LIST, consumer);
+        readPacket(this::handleZoneList, consumer);
     }
 
     public void performStatusUpdate(LightifyLuminary luminary, Consumer<LightifyLuminary> consumer) {
         byte[] packet = new PacketBuilder(this).on(STATUS_SINGLE).with(luminary).build();
 
         sendPacket(packet);
-        readPacket(STATUS_SINGLE, consumer);
+        readPacket(this::handleStatusUpdate, consumer);
     }
 
     void performSwitch(LightifyLuminary lightifyLuminary, boolean activate, Consumer<LightifyLuminary> consumer) {
         byte[] packet = new PacketBuilder(this).on(LIGHT_SWITCH).with(lightifyLuminary).switching(activate).build();
 
         sendPacket(packet);
-        readPacket(LIGHT_SWITCH, light -> {
+        readPacket(buildLightCommandHandler(LIGHT_SWITCH), light -> {
             light.updatePowered(activate);
             if (consumer != null) {
                 consumer.accept(light);
@@ -72,11 +158,11 @@ public class LightifyLink {
     }
 
     void performLuminance(LightifyLuminary lightifyLuminary, byte luminance, short millis, Consumer<LightifyLuminary> consumer) {
-        byte[] packet = new PacketBuilder(this).on(LIGHT_LUMINANCE).with(lightifyLuminary).luminance(luminance)
-                                               .millis(millis).build();
+        byte[] packet = new PacketBuilder(this).on(LIGHT_LUMINANCE).with(lightifyLuminary).luminance(luminance).millis(millis)
+                                               .build();
 
         sendPacket(packet);
-        readPacket(LIGHT_LUMINANCE, light -> {
+        readPacket(buildLightCommandHandler(LIGHT_LUMINANCE), light -> {
             light.updateLuminance(luminance);
             light.updatePowered(true);
             if (consumer != null) {
@@ -88,11 +174,10 @@ public class LightifyLink {
     void performRGB(LightifyLuminary lightifyLuminary, byte r, byte g, byte b, short millis,
                     Consumer<LightifyLuminary> consumer) {
 
-        byte[] packet = new PacketBuilder(this).on(LIGHT_COLOR).with(lightifyLuminary).rgb(r, g, b).millis(millis)
-                                               .build();
+        byte[] packet = new PacketBuilder(this).on(LIGHT_COLOR).with(lightifyLuminary).rgb(r, g, b).millis(millis).build();
 
         sendPacket(packet);
-        readPacket(LIGHT_COLOR, light -> {
+        readPacket(buildLightCommandHandler(LIGHT_COLOR), light -> {
             light.updateRGB(r, g, b);
             light.updatePowered(true);
             if (consumer != null) {
@@ -108,7 +193,7 @@ public class LightifyLink {
                                                .millis(millis).build();
 
         sendPacket(packet);
-        readPacket(LIGHT_TEMPERATURE, light -> {
+        readPacket(buildLightCommandHandler(LIGHT_TEMPERATURE), light -> {
             light.updateTemperature(temperature);
             light.updatePowered(true);
             if (consumer != null) {
@@ -121,47 +206,26 @@ public class LightifyLink {
         byte[] packet = new PacketBuilder(this).on(ZONE_INFO).with(lightifyZone).build();
 
         sendPacket(packet);
-        readPacket(ZONE_INFO, consumer);
+        readPacket(this::handleZoneInfo, consumer);
     }
 
-    byte nextSequence() {
+    int nextSequence() {
         while (true) {
             int oldValue = sequencer.get();
-            int next = oldValue + 1;
-            if (oldValue > 255) {
+            long next = oldValue + 1L;
+            if (oldValue > Integer.MAX_VALUE) {
                 next = 0;
             }
-            if (sequencer.compareAndSet(oldValue, next)) {
-                return (byte) next;
+            if (sequencer.compareAndSet(oldValue, (int) next)) {
+                return (int) next;
             }
         }
     }
 
-    private void onPacket(Command command, ByteBuffer buffer, Consumer<LightifyLuminary> consumer) {
-        switch (command) {
-            case STATUS_ALL:
-                handleStatusAll(buffer, consumer);
-                break;
-
-            case STATUS_SINGLE:
-                handleStatusUpdate(buffer, consumer);
-                break;
-
-            case ZONE_LIST:
-                handleZoneList(buffer, consumer);
-                break;
-
-            case ZONE_INFO:
-                handleZoneInfo(buffer, consumer);
-                break;
-
-            case LIGHT_SWITCH:
-            case LIGHT_LUMINANCE:
-            case LIGHT_TEMPERATURE:
-            case LIGHT_COLOR:
-                handleLightResponse(buffer, command, consumer);
-                break;
-        }
+    private BiConsumer<ByteBuffer, Consumer<LightifyLuminary>> buildLightCommandHandler(Command command) {
+        return (buffer, consumer) -> {
+            handleLightResponse(buffer, command, consumer);
+        };
     }
 
     private void handleZoneInfo(ByteBuffer buffer, Consumer<LightifyLuminary> consumer) {
@@ -174,13 +238,13 @@ public class LightifyLink {
         buffer.getShort(); // sequence number
         buffer.get(); // always 0
         buffer.get(); // always 0
-        buffer.get(); // always 0
+        System.out.println(buffer.get()); // always 0
 
         int zoneId = buffer.getShort();
 
         byte[] nameBuffer = new byte[16];
         buffer.get(nameBuffer, 0, nameBuffer.length);
-        String name = new String(nameBuffer, CP437).trim();
+        String name = new String(nameBuffer, UTF8).trim();
 
         LightifyZone zone = findZone(getZoneUID(zoneId));
 
@@ -206,16 +270,16 @@ public class LightifyLink {
         buffer.getShort(); // sequence number
         buffer.get(); // always 0
         buffer.get(); // always 0
-        buffer.get(); // always 0
+        System.out.println(buffer.get()); // always 0
 
         int numOfZones = buffer.getShort();
-        logger.info("Found {} zones...", numOfZones);
+        System.out.println("Found " + numOfZones + " zones...");
         for (int i = 0; i < numOfZones; i++) {
             int zoneId = buffer.getShort();
 
             byte[] nameBuffer = new byte[16];
             buffer.get(nameBuffer, 0, nameBuffer.length);
-            String name = new String(nameBuffer, CP437).trim();
+            String name = new String(nameBuffer, UTF8).trim();
 
             LightifyZone zone = new LightifyZone(this, name, zoneId);
             zones.put(getZoneUID(zoneId), zone);
@@ -233,7 +297,7 @@ public class LightifyLink {
         buffer.getShort(); // sequence number
         buffer.get(); // always 0
         buffer.get(); // always 0
-        buffer.get(); // always 0
+        System.out.println(buffer.get()); // always 0
 
         int id = buffer.getShort();
 
@@ -271,7 +335,7 @@ public class LightifyLink {
         buffer.getShort(); // sequence number
         buffer.get(); // always 0
         buffer.get(); // always 0
-        buffer.get(); // always 0
+        System.out.println(buffer.get()); // always 0
 
         int id = buffer.getShort();
 
@@ -297,7 +361,7 @@ public class LightifyLink {
         buffer.get(); // always 0
 
         int numOfLights = buffer.getShort();
-        logger.debug("Found {} devices...", numOfLights);
+        System.out.println("Found " + numOfLights + " devices...");
         for (int i = 0; i < numOfLights; i++) {
             int id = buffer.getShort();
 
@@ -307,8 +371,12 @@ public class LightifyLink {
 
             // Information (8)
             byte type = buffer.get();
-            int firmware = buffer.getInt();
-            boolean online = buffer.get() == 1;
+            String firmwareX = String.format("%02d", buffer.get());
+            firmwareX += String.format("%02d", buffer.get());
+            firmwareX += String.format("%02d", buffer.get());
+            firmwareX += buffer.get();
+            firmwareX += buffer.get();
+
             short groupId = buffer.getShort();
 
             // Stats (8)
@@ -324,7 +392,7 @@ public class LightifyLink {
             // Name (24)
             byte[] nameBuffer = new byte[24];
             buffer.get(nameBuffer, 0, nameBuffer.length);
-            String name = new String(nameBuffer, CP437).trim();
+            String name = new String(nameBuffer, UTF8).trim();
 
             LightifyLight light = new LightifyLight(this, name, address);
 
@@ -348,7 +416,7 @@ public class LightifyLink {
         });
     }
 
-    private void readPacket(Command command, Consumer<LightifyLuminary> consumer) {
+    private void readPacket(BiConsumer<ByteBuffer, Consumer<LightifyLuminary>> handler, Consumer<LightifyLuminary> consumer) {
         ByteBuffer buffer = exceptional(() -> {
             int length = 2;
             ByteBuffer b = waitForBytes(length, ByteOrder.LITTLE_ENDIAN);
@@ -357,7 +425,7 @@ public class LightifyLink {
             return waitForBytes(length, ByteOrder.LITTLE_ENDIAN);
         });
 
-        onPacket(command, buffer, consumer);
+        handler.accept(buffer, consumer);
     }
 
     private ByteBuffer waitForBytes(int length, ByteOrder byteOrder)

@@ -1,8 +1,12 @@
+package com.noctarius.lightify;
+
 public enum Command {
+    TEST(0x0E, true),
+
     /**
      * Retrieves information and status about all paired devices
      */
-    STATUS_ALL(0x12, true),
+    STATUS_ALL(0x13, true),
 
     /**
      * Retrieves information about a single paired device

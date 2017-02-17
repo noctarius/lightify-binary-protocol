@@ -1,30 +1,16 @@
-/*
- * Copyright (c) 2014-2017 by the respective copyright holders.
- *
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- */
+package com.noctarius.lightify;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Objects;
 
-/**
- * Helper class to easily build binary packets which correspond to the OSRAM Lightify proprietary
- * binary protocol.
- *
- * Thanks to rainlake (https://github.com/rainlake/node-lightify) for the first steps into the protocol.
- *
- * @author Christoph Engelbert (@noctarius2k) - Initial contribution
- */
 final class PacketBuilder {
 
     private final LightifyLink lightifyLink;
 
     private LightifyLuminary luminary;
 
+    private byte commandId;
     private Command command;
 
     private byte[] data;
@@ -42,6 +28,11 @@ final class PacketBuilder {
 
     PacketBuilder with(LightifyLuminary luminary) {
         this.luminary = luminary;
+        return this;
+    }
+
+    PacketBuilder on(byte commandId) {
+        this.commandId = commandId;
         return this;
     }
 
@@ -82,12 +73,12 @@ final class PacketBuilder {
     }
 
     byte[] build() {
-        validate();
+        //validate();
 
         int packetSize = calculatePacketSize();
         ByteBuffer buffer = ByteBuffer.allocate(packetSize + 2).order(ByteOrder.LITTLE_ENDIAN);
 
-        short requestId = lightifyLink.nextSequence();
+        int requestId = lightifyLink.nextSequence();
         putHeader(packetSize, requestId, buffer);
 
         if (luminary != null) {
@@ -131,14 +122,14 @@ final class PacketBuilder {
         }
     }
 
-    private void putHeader(int packetSize, short requestId, ByteBuffer buffer) {
+    private void putHeader(int packetSize, int requestId, ByteBuffer buffer) {
         buffer.putShort(0, (short) packetSize);
 
-        byte zoneOrNode = command.isZone() ? 0x02 : luminary.typeFlag();
+        byte zoneOrNode = 0;//(command != null ? command.isZone() : true) ? 0x02 : luminary.typeFlag();
         buffer.put(2, zoneOrNode);
 
-        buffer.put(3, command.getId());
-        buffer.putShort(4, requestId);
+        buffer.put(3, command != null ? command.getId() : commandId);
+        buffer.putInt(4, requestId);
     }
 
     private void validate() {
@@ -161,7 +152,7 @@ final class PacketBuilder {
     }
 
     private int calculatePacketSize() {
-        int size = command.isZone() ? 6 : 14; // header
+        int size = (command != null ? command.isZone() : true) ? 6 : 14; // header
         if (luminary != null) {
             size += 8; // address bytes
         }

@@ -1,20 +1,8 @@
-/*
- * Copyright (c) 2014-2017 by the respective copyright holders.
- *
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- */
+package com.noctarius.lightify;
 
 import java.util.Arrays;
 import java.util.function.Consumer;
 
-/**
- * Superclass of lights, zones and possibly further pairable devices.
- *
- * @author Christoph Engelbert (@noctarius2k) - Initial contribution
- */
 public abstract class LightifyLuminary {
 
     private final LightifyLink lightifyLink;
@@ -70,7 +58,7 @@ public abstract class LightifyLuminary {
 
     @Override
     public String toString() {
-        return "LightifyLuminary{" + "name='" + name + '\'' + ", status=" + status
+        return "com.noctarius.lightify.LightifyLuminary{" + "name='" + name + '\'' + ", status=" + status
                 + ", temperature=" + temperature + ", luminance=" + luminance + ", rgb=" + Arrays.toString(rgb) + '}';
     }
 

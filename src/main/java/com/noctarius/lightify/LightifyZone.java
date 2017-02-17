@@ -1,11 +1,4 @@
-/*
- * Copyright (c) 2014-2017 by the respective copyright holders.
- *
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- */
+package com.noctarius.lightify;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -13,11 +6,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-/**
- * This class represents a Lightify collection of devices.
- *
- * @author Christoph Engelbert (@noctarius2k) - Initial contribution
- */
 public class LightifyZone extends LightifyLuminary {
 
     private final int zoneId;
@@ -96,7 +84,7 @@ public class LightifyZone extends LightifyLuminary {
 
     @Override
     public String toString() {
-        return "LightifyZone{" + "zoneId=" + zoneId + ", address=" + Arrays.toString(address) + ", luminaries=" + luminaries
+        return "com.noctarius.lightify.LightifyZone{" + "zoneId=" + zoneId + ", address=" + Arrays.toString(address) + ", luminaries=" + luminaries
                 + ", super=" + super.toString() + '}';
     }
 

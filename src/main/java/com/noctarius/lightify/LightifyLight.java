@@ -1,3 +1,5 @@
+package com.noctarius.lightify;
+
 import java.util.Arrays;
 
 public class LightifyLight extends LightifyLuminary {
@@ -16,7 +18,7 @@ public class LightifyLight extends LightifyLuminary {
 
     @Override
     public String toString() {
-        return "LightifyLight{" + "address=" + Arrays.toString(address) + ", super=" + super.toString() + '}';
+        return "com.noctarius.lightify.LightifyLight{" + "address=" + Arrays.toString(address) + ", super=" + super.toString() + '}';
     }
 
     @Override
