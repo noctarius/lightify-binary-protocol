@@ -518,14 +518,14 @@ Known command ids are put into the following list:
 | ???
 
 | _0xD6_
-| Unknown, retured unknown error code 0x15
-|
-|
+| Unknown, wrong addressing
+| ZONE?, DEVICE?
+| ???
 
 | _0xD8_
-| Unknown, retured unknown error code 0x15
-|
-|
+| Unknown, wrong addressing
+| ZONE?, DEVICE?
+| ???
 
 | _0xD9_
 | Unknown, wrong addressing (scene builder???)
@@ -560,12 +560,12 @@ Known command ids are put into the following list:
 | _0xE1_
 | Unknown, wrong addressing
 | ZONE?, DEVICE?
-|
+| ???
 
 | _0xE2_
-| Unknown, no data returned, no error, what's that?
+| Unknown, no answer
 | BROADCAST?
-|
+| ???
 
 
 | _0xE3_
@@ -574,44 +574,44 @@ Known command ids are put into the following list:
 | <<PACKET_GET_WIFI_CONFIGURATION>>
 
 | _0xE4_
-| Unknown, short packet
-|
-|
+| Unknown, activates light (with 1 byte data) - activate all?
+| BROADCAST?
+| ???
 
 | _0xE5_
-| Unknown, returned actual data (QWORD(0,0,0,0))
+| Unknown, returned actual data (QWORD(1,0,0,0))
 | BROADCAST?
-|
+| ???
 
 | _0xE6_
 | Unknown, returned actual data (WORD(1,15))
 | BROADCAST?
-|
+| ???
 
 | _0xE6_
 | Unknown, returned actual data (WORD(1,15))
 | BROADCAST?
-|
+| ???
 
 | _0xE7_
-| Unknown, no data returned, no error, what's that?
+| Unknown, no answer
 | BROADCAST?
-|
+| ???
 
 | _0xE8_
 | Unknown, retured unknown error code 0x16
-|
-|
+| BROADCAST?
+| ???
 
 | _0xE9_
 | Unknown, retured unknown error code 0xD1
-|
-|
+| BROADCAST?
+| ???
 
 | _0xEA_
 | Unknown, retured unknown error code 0xD1
-|
-|
+| BROADCAST?
+| ???
 
 |===
 
