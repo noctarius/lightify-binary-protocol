@@ -43,19 +43,20 @@ Furthermore the header contains a request id which is recommended, but not requi
 
 .Packet Header
 |===
-| Byte(s) | Description | Possible values
+| Byte(s) | Description | Data type
 
 | 0-1
 | Length of the packet, incl header length
-| uint16_t: _0x00_ >= x <= _0xFFFF_
+| uint16_t
 
 | 2
 | Packet type (flag)
-| uint8_t: enum -> +
-_0x00_: Light Device +
-_0x01_: Device response? +
-_0x02_: Broadcast +
-_0x03_: Zone Response?
+| uint8_t: enum { +
+  _0x00_: Light Device +
+  _0x01_: Device response? +
+  _0x02_: Broadcast +
+  _0x03_: Zone Response? +
+}
 
 | 3
 | Command Id
@@ -63,11 +64,11 @@ _0x03_: Zone Response?
 
 | 4-7
 | Unique, increasing request id
-| uint64_t: _0x00_ >= x <= _0xFFFFFFFF_
+| uint64_t
 
 | 8
 | Status code?
-| uint8_t: enum -> +
+| uint8_t: enum { +
 _0x00_: No error? +
 _0x01_: Wrong (number of) parameter(s)? +
 _0x14_: ? +
@@ -77,7 +78,8 @@ _0xA7_: ? +
 _0x0B_: ? +
 _0xC2_: ? +
 _0xD1_: ? +
-_0xFF_: Unknown command?
+_0xFF_: Unknown command? +
+}
 
 |===
 
@@ -122,7 +124,7 @@ An address always contains 8 byte, no matter it's adressing a device or zone and
 
 .Addressing Header
 |===
-| Byte(s) | Description | Possible values
+| Byte(s) | Description | Data type
 
 | 8-15
 | Address
@@ -140,7 +142,7 @@ Devices are addressed by, what seems to be, a hardware address, similar to MAC a
 
 .Device Addressing
 |===
-| Byte(s) | Description | Possible values
+| Byte(s) | Description | Data type
 
 | 0-7
 | Device address
@@ -158,7 +160,7 @@ Zones are identified by their zone id. Addressing itself, however, is still usin
 
 .Zone Addressing
 |===
-| Byte | values
+| Byte | Data type
 
 | 1
 | uint8_t: lower significant byte
@@ -629,7 +631,7 @@ Returns a list of all paired devices.
 
 .Request data
 |===
-| Byte(s) | Description | Possible values
+| Byte(s) | Description | Data type
 
 | 16
 | Unknown
@@ -639,11 +641,11 @@ Returns a list of all paired devices.
 
 .Response data
 |===
-| Byte(s) | Description | Possible values
+| Byte(s) | Description | Data type
 
 | 9-10
 | Number of devices
-| uint16_t: _0x00_ >= x <= _0xFFFF_
+| uint16_t
 
 | ...50 bytes each device
 | Device status information
@@ -653,11 +655,11 @@ Returns a list of all paired devices.
 
 .Device status information
 |===
-| Byte(s) | Description | Possible values
+| Byte(s) | Description | Data type
 
 | 0-1
 | Device id?
-| uint16_t: _0x00_ >= x <= 0xFFFF
+| uint16_t
 
 | 2-9
 | Device address
@@ -665,7 +667,7 @@ Returns a list of all paired devices.
 
 | 10
 | Device type?
-| uint8_t: <<Device Types>>
+| uint8_t: See <<Device Types>>
 
 | 11-15
 | Firmware version
@@ -674,7 +676,7 @@ Returns a list of all paired devices.
 
 | 16-17
 | Zone Id
-| uint16_t: _0x00_ >= x <= _0xFFFF_
+| uint16_t
 
 | 18
 | Power switch status
@@ -682,7 +684,7 @@ Returns a list of all paired devices.
 
 | 19
 | Luminance value
-| uint8_t: _0x00_ >= x <= _0xFF_
+| uint8_t
 
 | 20-21
 | Temparature value (in Kelvin)
@@ -690,15 +692,15 @@ Returns a list of all paired devices.
 
 | 22
 | Red value
-| uint8_t: _0x00_ >= x <= _0xFF_
+| uint8_t
 
 | 23
 | Green value
-| uint8_t: _0x00_ >= x <= _0xFF_
+| uint8_t
 
 | 24
 | Blue value
-| uint8_t: _0x00_ >= x <= _0xFF_
+| uint8_t
 
 | 25
 | Alpha value
@@ -706,7 +708,7 @@ Returns a list of all paired devices.
 
 | 26-49
 | Device name
-| uint8_t[24]: CP437 encoded, zero terminated string
+| uint8_t[24]: UTF-8 encoded, zero terminated string
 
 |===
 
@@ -717,7 +719,7 @@ Returns a list of all configured zones.
 
 .Request data
 |===
-| Byte(s) | Description | Possible values
+| Byte(s) | Description | Data type
 
 | -
 | No additional information to send
@@ -727,11 +729,11 @@ Returns a list of all configured zones.
 
 .Response data
 |===
-| Byte(s) | Description | Possible values
+| Byte(s) | Description | Data type
 
 | 9-10
 | Number of zones
-| uint16_t: _0x00_ >= x <= _0xFFFF_
+| uint16_t
 
 | ...18 bytes each zone
 | Zone information
@@ -741,11 +743,11 @@ Returns a list of all configured zones.
 
 .Zone information
 |===
-| Byte(s) | Description | Possible values
+| Byte(s) | Description | Data type
 
 | 0-1
 | Zone id
-| uint16_t: _0x00_ >= x <= 0xFFFF
+| uint16_t
 
 | 2-17
 | Zone name
@@ -761,7 +763,7 @@ Returns information about the requested zone, including assigned devices.
 
 .Request data
 |===
-| Byte(s) | Description | Possible values
+| Byte(s) | Description | Data type
 
 | -
 | No additional information to send
@@ -771,11 +773,11 @@ Returns information about the requested zone, including assigned devices.
 
 .Response data
 |===
-| Byte(s) | Description | Possible values
+| Byte(s) | Description | Data type
 
 | 9-10
 | Zone id
-| uint32_t: _0x00_ >= x <= _0xFFFF_
+| uint32_t
 
 | 11-27
 | Zone name
@@ -783,7 +785,7 @@ Returns information about the requested zone, including assigned devices.
 
 | 28
 | Number of assigned devices
-| uint8_t: _0x00_ >= x <= _0xFF_
+| uint8_t
 
 | ...8 bytes each device
 | Device addresses
@@ -797,25 +799,25 @@ Sets the luminance value of the addressed device or zone.
 
 .Request data
 |===
-| Byte(s) | Description | Possible values
+| Byte(s) | Description | Data type
 
 | 16
 | Luminance value
-| uint8_t: 0x00 >= x <= 0xFF
+| uint8_t
 
 | 17-18
 | Transition time in millis
-| uint16_t: 0x00 >= x <= 0xFFFF
+| uint16_t
 
 |===
 
 .Response data
 |===
-| Byte(s) | Description | Possible values
+| Byte(s) | Description | Data type
 
 | 9-10
 | Devide or zone id
-| uint32_t: _0x00_ >= x <= _0xFFFF_
+| uint16_t
 
 | 11-18
 | Device or zone address
@@ -829,7 +831,7 @@ Sets the power switch state of the addressed device or zone.
 
 .Request data
 |===
-| Byte(s) | Description | Possible values
+| Byte(s) | Description | Data type
 
 | 16
 | Power switch state
@@ -839,11 +841,11 @@ Sets the power switch state of the addressed device or zone.
 
 .Response data
 |===
-| Byte(s) | Description | Possible values
+| Byte(s) | Description | Data type
 
 | 9-10
 | Devide or zone id
-| uint32_t: _0x00_ >= x <= _0xFFFF_
+| uint16_t
 
 | 11-18
 | Device or zone address
@@ -857,7 +859,7 @@ Sets the white light temperature of the addressed device or zone between 2,000 a
 
 .Request data
 |===
-| Byte(s) | Description | Possible values
+| Byte(s) | Description | Data type
 
 | 16
 | White light temperature
@@ -865,17 +867,17 @@ Sets the white light temperature of the addressed device or zone between 2,000 a
 
 | 17-18
 | Transition time in millis
-| uint16_t: 0x00 >= x <= 0xFFFF
+| uint16_t
 
 |===
 
 .Response data
 |===
-| Byte(s) | Description | Possible values
+| Byte(s) | Description | Data type
 
 | 9-10
 | Devide or zone id
-| uint32_t: _0x00_ >= x <= _0xFFFF_
+| uint16_t
 
 | 11-18
 | Device or zone address
@@ -889,21 +891,21 @@ Activates a predefined scene on the addressed device or zone.
 
 .Request data
 |===
-| Byte(s) | Description | Possible values
+| Byte(s) | Description | Data type
 
 | 16-17
 | Scene id
-| uint16_t: _0x00_  >= x <= _0xFFFF_
+| uint16_t
 
 |===
 
 .Response data
 |===
-| Byte(s) | Description | Possible values
+| Byte(s) | Description | Data type
 
 | 9-10
 | Devide or zone id
-| uint32_t: _0x00_ >= x <= _0xFFFF_
+| uint16_t
 
 | 11-18
 | Device or zone address
@@ -927,12 +929,12 @@ Returns information about the requested device.
 
 .Response data
 |===
-| Byte(s) | Description | Possible values
+| Byte(s) | Description | Data type
 
 
 | 9-10
 | Device id?
-| uint16_t: _0x00_ >= x <= 0xFFFF
+| uint16_t
 
 | 11-18
 | Device address
@@ -952,7 +954,7 @@ Returns information about the requested device.
 
 | 22
 | Luminance value
-| uint8_t: _0x00_ >= x <= _0xFF_
+| uint8_t
 
 | 23-24
 | Temparature value (in Kelvin)
@@ -960,19 +962,19 @@ Returns information about the requested device.
 
 | 25
 | Red value
-| uint8_t: _0x00_ >= x <= _0xFF_
+| uint8_t
 
 | 26
 | Green value
-| uint8_t: _0x00_ >= x <= _0xFF_
+| uint8_t
 
 | 27
 | Blue value
-| uint8_t: _0x00_ >= x <= _0xFF_
+| uint8_t
 
 | 28
 | Alpha value
-| uint8_t: always? _0xFF_
+| uint8_t: always _0xFF_?
 
 | 29-31
 | Unknown
@@ -987,24 +989,25 @@ Retrieves or configures the wifi configuration.
 
 .Request data
 |===
-| Byte(s) | Description | Possible values
+| Byte(s) | Description | Data type
 
 | 16
 | Subcommand
-| uint8_t: -> +
+| uint8_t: enum { +
 _0x00_: Get wifi configuration +
 _0x01_: Set wifi configuration +
-_0x03_: Scan wifi configuration
+_0x03_: Scan wifi configuration +
+}
 
 |===
 
 .Response data
 |===
-| Byte(s) | Description | Possible values
+| Byte(s) | Description | Data type
 
 | 9
 | Number of profiles
-| uint8_t: _0x00_ >= x <= _0xFF_
+| uint8_t
 
 | ...97 bytes each profile
 | Profile information
@@ -1014,7 +1017,7 @@ _0x03_: Scan wifi configuration
 
 .Profile information
 |===
-| Byte(s) | Description | Possible values
+| Byte(s) | Description | Data type
 
 | 0-31
 | Profile Name
@@ -1064,7 +1067,7 @@ Retrieves the current firmware version of the gateway.
 
 .Request data
 |===
-| Byte(s) | Description | Possible values
+| Byte(s) | Description | Data type
 
 | -
 | No additional information to send
@@ -1074,7 +1077,7 @@ Retrieves the current firmware version of the gateway.
 
 .Response data
 |===
-| Byte(s) | Description | Possible values
+| Byte(s) | Description | Data type
 
 | 9-12
 | Firmware version
