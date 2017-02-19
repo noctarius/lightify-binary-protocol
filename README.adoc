@@ -885,6 +885,50 @@ Sets the white light temperature of the addressed device or zone between 2,000 a
 
 |===
 
+=== PACKET_SET_COLOR
+
+Sets the RGB color value of the addressed device or zone.
+
+.Request data
+|===
+| Byte(s) | Description | Data type
+
+| 16
+| Red value
+| uint8_t
+
+| 17
+| Green value
+| uint8_t
+
+| 18
+| Blue value
+| uint8_t
+
+| 19
+| Alpha value
+| uint8_t: always _0xFF_?
+
+| 20-21
+| Transition time in millis
+| uint16_t
+
+|===
+
+.Response data
+|===
+| Byte(s) | Description | Data type
+
+| 9-10
+| Devide or zone id
+| uint16_t
+
+| 11-18
+| Device or zone address
+| uint64_t: See <<Device and Zone Addressing>>
+
+|===
+
 === PACKET_ACTIVATE_SCENE
 
 Activates a predefined scene on the addressed device or zone.
