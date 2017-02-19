@@ -47,11 +47,11 @@ Furthermore the header contains a request id which is recommended, but not requi
 
 | 0-1
 | Length of the packet, incl header length
-| WORD: _0x00_ >= x <= _0xFFFF_
+| uint16_t: _0x00_ >= x <= _0xFFFF_
 
 | 2
 | Packet type (flag)
-| BYTE: enum -> +
+| uint8_t: enum -> +
 _0x00_: Light Device +
 _0x01_: Device response? +
 _0x02_: Broadcast +
@@ -59,15 +59,15 @@ _0x03_: Zone Response?
 
 | 3
 | Command Id
-| BYTE: See <<Lightify Commands>>
+| uint8_t: See <<Lightify Commands>>
 
 | 4-7
 | Unique, increasing request id
-| QWORD: _0x00_ >= x <= _0xFFFFFFFF_
+| uint64_t: _0x00_ >= x <= _0xFFFFFFFF_
 
 | 8
 | Status code?
-| BYTE: enum -> +
+| uint8_t: enum -> +
 _0x00_: No error? +
 _0x01_: Wrong (number of) parameter(s)? +
 _0x14_: ? +
@@ -126,7 +126,7 @@ An address always contains 8 byte, no matter it's adressing a device or zone and
 
 | 8-15
 | Address
-| QWORD: See the following specification
+| uint64_t: See the following specification
 
 | 16-...
 | Command specific data
@@ -144,7 +144,7 @@ Devices are addressed by, what seems to be, a hardware address, similar to MAC a
 
 | 0-7
 | Device address
-| QWORD
+| uint64_t
 
 |===
 
@@ -161,13 +161,13 @@ Zones are identified by their zone id. Addressing itself, however, is still usin
 | Byte | values
 
 | 1
-| BYTE: lower significant byte
+| uint8_t: lower significant byte
 
 | 2
-| BYTE: higher significant byte
+| uint8_t: higher significant byte
 
 | 3-7
-| BYTE[6]: _0x00_
+| uint8_t[6]: _0x00_
 
 |===
 
@@ -243,7 +243,7 @@ Known command ids are put into the following list:
 | <<PACKET_LIST_ZONES>>
 
 | _0x1F_
-| Unknown, actual content returned (WORD(0,0))
+| Unknown, actual content returned (uint16_t(0,0))
 | BROADCAST?
 | ???
 
@@ -328,7 +328,7 @@ Known command ids are put into the following list:
 | ???
 
 | _0x54_
-| Unknown, returned actual data (WORD(0,0))
+| Unknown, returned actual data (uint16_t(0,0))
 | BROADCAST?
 | ???
 
@@ -574,22 +574,22 @@ Known command ids are put into the following list:
 | <<PACKET_GET_WIFI_CONFIGURATION>>
 
 | _0xE4_
-| Unknown, activates light (with 1 byte data) - activate all?
+| Unknown, activates light (with 1 byte data) - seems to reset the light
 | BROADCAST?
 | ???
 
 | _0xE5_
-| Unknown, returned actual data (QWORD(1,0,0,0))
+| Unknown, returned actual data (uint64_t(1,0,0,0))
 | BROADCAST?
 | ???
 
 | _0xE6_
-| Unknown, returned actual data (WORD(1,15))
+| Unknown, returned actual data (uint16_t(1,15))
 | BROADCAST?
 | ???
 
 | _0xE6_
-| Unknown, returned actual data (WORD(1,15))
+| Unknown, returned actual data (uint16_t(1,15))
 | BROADCAST?
 | ???
 
@@ -633,7 +633,7 @@ Returns a list of all paired devices.
 
 | 16
 | Unknown
-| BYTE: always? _0x01_
+| uint8_t: always? _0x01_
 
 |===
 
@@ -643,7 +643,7 @@ Returns a list of all paired devices.
 
 | 9-10
 | Number of devices
-| WORD: _0x00_ >= x <= _0xFFFF_
+| uint16_t: _0x00_ >= x <= _0xFFFF_
 
 | ...50 bytes each device
 | Device status information
@@ -657,58 +657,58 @@ Returns a list of all paired devices.
 
 | 0-1
 | Device id?
-| WORD: _0x00_ >= x <= 0xFFFF
+| uint16_t: _0x00_ >= x <= 0xFFFF
 
 | 2-9
 | Device address
-| QWORD: See <<Device address>>
+| uint64_t: See <<Device address>>
 
 | 10
 | Device type?
-| BYTE: <<Device Types>>
+| uint8_t: <<Device Types>>
 
 | 11-15
 | Firmware version
-| BYTE[5]: Translation into firmware version string -> +
-{%02d, BYTE[0]}+{%02d, BYTE[1]}+{%02d, BYTE[2]}+BYTE[3]+BYTE[4]
+| uint8_t[5]: Translation into firmware version string -> +
+{%02d, uint8_t[0]}+{%02d, uint8_t[1]}+{%02d, uint8_t[2]}+uint8_t[3]+uint8_t[4]
 
 | 16-17
 | Zone Id
-| WORD: _0x00_ >= x <= _0xFFFF_
+| uint16_t: _0x00_ >= x <= _0xFFFF_
 
 | 18
 | Power switch status
-| BYTE: enum -> +
+| uint8_t: enum -> +
 _0x00_: off +
 _0x01_: on
 
 | 19
 | Luminance value
-| BYTE: _0x00_ >= x <= _0xFF_
+| uint8_t: _0x00_ >= x <= _0xFF_
 
 | 20-21
 | Temparature value (in Kelvin)
-| WORD: _2,000_ >= x <= _6,500_
+| uint16_t: _2,000_ >= x <= _6,500_
 
 | 22
 | Red value
-| BYTE: _0x00_ >= x <= _0xFF_
+| uint8_t: _0x00_ >= x <= _0xFF_
 
 | 23
 | Green value
-| BYTE: _0x00_ >= x <= _0xFF_
+| uint8_t: _0x00_ >= x <= _0xFF_
 
 | 24
 | Blue value
-| BYTE: _0x00_ >= x <= _0xFF_
+| uint8_t: _0x00_ >= x <= _0xFF_
 
 | 25
 | Alpha value
-| BYTE: always? _0xFF_
+| uint8_t: always? _0xFF_
 
 | 26-49
 | Device name
-| BYTE[24]: CP437 encoded, zero terminated string
+| uint8_t[24]: CP437 encoded, zero terminated string
 
 |===
 
@@ -733,7 +733,7 @@ Returns a list of all configured zones.
 
 | 9-10
 | Number of zones
-| WORD: _0x00_ >= x <= _0xFFFF_
+| uint16_t: _0x00_ >= x <= _0xFFFF_
 
 | ...18 bytes each zone
 | Zone information
@@ -747,11 +747,11 @@ Returns a list of all configured zones.
 
 | 0-1
 | Zone id
-| WORD: _0x00_ >= x <= 0xFFFF
+| uint16_t: _0x00_ >= x <= 0xFFFF
 
 | 2-17
 | Zone name
-| BYTE[16]: UTF-8 encoded, zero terminated string
+| uint8_t[16]: UTF-8 encoded, zero terminated string
 
 |===
 
@@ -777,15 +777,15 @@ Returns information about the requested zone, including assigned devices.
 
 | 9-10
 | Zone id
-| DWORD: _0x00_ >= x <= _0xFFFF_
+| uint32_t: _0x00_ >= x <= _0xFFFF_
 
 | 11-27
 | Zone name
-| BYTE[16]: UTF-8 encoded, zero terminated string
+| uint8_t[16]: UTF-8 encoded, zero terminated string
 
 | 28
 | Number of assigned devices
-| BYTE: _0x00_ >= x <= _0xFF_
+| uint8_t: _0x00_ >= x <= _0xFF_
 
 | ...8 bytes each device
 | Device addresses
@@ -803,11 +803,11 @@ Sets the luminance value of the addressed device or zone.
 
 | 16
 | Luminance value
-| BYTE: 0x00 >= x <= 0xFF
+| uint8_t: 0x00 >= x <= 0xFF
 
 | 17-18
 | Transition time in millis
-| WORD: 0x00 >= x <= 0xFFFF
+| uint16_t: 0x00 >= x <= 0xFFFF
 
 |===
 
@@ -817,11 +817,11 @@ Sets the luminance value of the addressed device or zone.
 
 | 9-10
 | Devide or zone id
-| DWORD: _0x00_ >= x <= _0xFFFF_
+| uint32_t: _0x00_ >= x <= _0xFFFF_
 
 | 11-18
 | Device or zone address
-| QWORD: See <<Device and Zone Addressing>>
+| uint64_t: See <<Device and Zone Addressing>>
 
 |===
 
@@ -835,7 +835,7 @@ Sets the power switch state of the addressed device or zone.
 
 | 16
 | Power switch state
-| BYTE: enum -> +
+| uint8_t: enum -> +
 _0x00_: off +
 _0x01_: on
 
@@ -847,11 +847,11 @@ _0x01_: on
 
 | 9-10
 | Devide or zone id
-| DWORD: _0x00_ >= x <= _0xFFFF_
+| uint32_t: _0x00_ >= x <= _0xFFFF_
 
 | 11-18
 | Device or zone address
-| QWORD: See <<Device and Zone Addressing>>
+| uint64_t: See <<Device and Zone Addressing>>
 
 |===
 
@@ -865,11 +865,11 @@ Sets the white light temperature of the addressed device or zone between 2,000 a
 
 | 16
 | White light temperature
-| WORD: _2,000_ >= x <= _6,500_
+| uint16_t: _2,000_ >= x <= _6,500_
 
 | 17-18
 | Transition time in millis
-| WORD: 0x00 >= x <= 0xFFFF
+| uint16_t: 0x00 >= x <= 0xFFFF
 
 |===
 
@@ -879,11 +879,11 @@ Sets the white light temperature of the addressed device or zone between 2,000 a
 
 | 9-10
 | Devide or zone id
-| DWORD: _0x00_ >= x <= _0xFFFF_
+| uint32_t: _0x00_ >= x <= _0xFFFF_
 
 | 11-18
 | Device or zone address
-| QWORD: See <<Device and Zone Addressing>>
+| uint64_t: See <<Device and Zone Addressing>>
 
 |===
 
@@ -897,7 +897,7 @@ Activates a predefined scene on the addressed device or zone.
 
 | 16-17
 | Scene id
-| WORD: _0x00_  >= x <= _0xFFFF_
+| uint16_t: _0x00_  >= x <= _0xFFFF_
 
 |===
 
@@ -907,11 +907,11 @@ Activates a predefined scene on the addressed device or zone.
 
 | 9-10
 | Devide or zone id
-| DWORD: _0x00_ >= x <= _0xFFFF_
+| uint32_t: _0x00_ >= x <= _0xFFFF_
 
 | 11-18
 | Device or zone address
-| QWORD: See <<Device and Zone Addressing>>
+| uint64_t: See <<Device and Zone Addressing>>
 
 |===
 
@@ -936,53 +936,53 @@ Returns information about the requested device.
 
 | 9-10
 | Device id?
-| WORD: _0x00_ >= x <= 0xFFFF
+| uint16_t: _0x00_ >= x <= 0xFFFF
 
 | 11-18
 | Device address
-| QWORD: See <<Device address>>
+| uint64_t: See <<Device address>>
 
 | 19
 | Unknown
-| BYTE: ???
+| uint8_t: ???
 
 | 20
 | Unknown
-| BYTE: ???
+| uint8_t: ???
 
 | 21
 | Power switch status
-| BYTE: enum -> +
+| uint8_t: enum -> +
 _0x00_: off +
 _0x01_: on
 
 | 22
 | Luminance value
-| BYTE: _0x00_ >= x <= _0xFF_
+| uint8_t: _0x00_ >= x <= _0xFF_
 
 | 23-24
 | Temparature value (in Kelvin)
-| WORD: _2,000_ >= x <= _6,500_
+| uint16_t: _2,000_ >= x <= _6,500_
 
 | 25
 | Red value
-| BYTE: _0x00_ >= x <= _0xFF_
+| uint8_t: _0x00_ >= x <= _0xFF_
 
 | 26
 | Green value
-| BYTE: _0x00_ >= x <= _0xFF_
+| uint8_t: _0x00_ >= x <= _0xFF_
 
 | 27
 | Blue value
-| BYTE: _0x00_ >= x <= _0xFF_
+| uint8_t: _0x00_ >= x <= _0xFF_
 
 | 28
 | Alpha value
-| BYTE: always? _0xFF_
+| uint8_t: always? _0xFF_
 
 | 29-31
 | Unknown
-| BYTE[3]: ???
+| uint8_t[3]: ???
 
 |===
 
@@ -997,7 +997,7 @@ Retrieves or configures the wifi configuration.
 
 | 16
 | Subcommand
-| BYTE: -> +
+| uint8_t: -> +
 _0x00_: Get wifi configuration +
 _0x01_: Set wifi configuration +
 _0x03_: Scan wifi configuration
@@ -1010,7 +1010,7 @@ _0x03_: Scan wifi configuration
 
 | 9
 | Number of profiles
-| Byte: _0x00_ >= x <= _0xFF_
+| uint8_t: _0x00_ >= x <= _0xFF_
 
 | ...97 bytes each profile
 | Profile information
@@ -1024,43 +1024,43 @@ _0x03_: Scan wifi configuration
 
 | 0-31
 | Profile Name
-| BYTE[32]: UTF-8 encoded, zero terminated string
+| uint8_t[32]: UTF-8 encoded, zero terminated string
 
 | 32-64
 | SSID
-| BYTE[33]: UTF-8 encoded, zero terminated string
+| uint8_t[33]: UTF-8 encoded, zero terminated string
 
 | 65-70
 | BSSID
-| BYTE[6]: UTF-8 encoded, zero terminated string
+| uint8_t[6]: UTF-8 encoded, zero terminated string
 
 | 71-74
 | Channel
-| DWORD
+| uint32_t
 
 | 75-76
 | Unknown
-| WORD: ???
+| uint16_t: ???
 
 | 77-80
 | IP Address
-| QWORD: 4 bytes of IP address
+| uint64_t: 4 bytes of IP address
 
 | 81-84
 | Gateway
-| QWORD: 4 bytes of IP address
+| uint64_t: 4 bytes of IP address
 
 | 85-88
 | Netmask
-| QWORD: 4 bytes of IP address
+| uint64_t: 4 bytes of IP address
 
 | 89-92
 | DNS #1
-| QWORD: 4 bytes of IP address
+| uint64_t: 4 bytes of IP address
 
 | 93-96
 | DNS #2
-| QWORD: 4 bytes of IP address
+| uint64_t: 4 bytes of IP address
 
 |===
 
@@ -1084,7 +1084,7 @@ Retrieves the current firmware version of the gateway.
 
 | 9-12
 | Firmware version
-| BYTE[4]: Translation into firmware version string -> +
-{%02d, BYTE[0]}+{%02d, BYTE[1]}+{%02d, BYTE[2]}+{%02d, BYTE[3]}
+| uint8_t[4]: Translation into firmware version string -> +
+{%02d, uint8_t[0]}+{%02d, uint8_t[1]}+{%02d, uint8_t[2]}+{%02d, uint8_t[3]}
 
 |===
