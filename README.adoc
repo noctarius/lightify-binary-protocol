@@ -678,9 +678,7 @@ Returns a list of all paired devices.
 
 | 18
 | Power switch status
-| uint8_t: enum -> +
-_0x00_: off +
-_0x01_: on
+| uint8_t: bool
 
 | 19
 | Luminance value
@@ -835,9 +833,7 @@ Sets the power switch state of the addressed device or zone.
 
 | 16
 | Power switch state
-| uint8_t: enum -> +
-_0x00_: off +
-_0x01_: on
+| uint8_t: bool
 
 |===
 
@@ -952,9 +948,7 @@ Returns information about the requested device.
 
 | 21
 | Power switch status
-| uint8_t: enum -> +
-_0x00_: off +
-_0x01_: on
+| uint8_t: bool
 
 | 22
 | Luminance value
