@@ -46,7 +46,7 @@ Furthermore the header contains a request id which is recommended, but not requi
 | Byte(s) | Description | Data type
 
 | 0-1
-| Length of the packet, incl header length
+| Length of the packet, excl header length
 | uint16_t
 
 | 2
