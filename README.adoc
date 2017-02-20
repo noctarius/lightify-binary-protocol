@@ -66,6 +66,14 @@ Furthermore the header contains a request id which is recommended, but not requi
 | Unique, increasing request id
 | uint64_t
 
+|===
+
+Response packets have an additional field in the header, which seems to return a status / error code for the request.
+
+.Response Header Status Code
+|===
+| Byte(s) | Description | Data type
+
 | 8
 | Status code?
 | uint8_t: enum { +
