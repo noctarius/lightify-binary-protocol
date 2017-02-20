@@ -19,7 +19,7 @@ This document is meant to create a public specification of the known facts about
 
 All information in this document are collected using *reverse engineering practices* or are available by other implementations / people on the internet. Certain *information might be incorrect, outdated or unspecific*. Any help completing this document is appreciated, please file pull requests.
 
-Using and/or implementing information in this document *might brick your device* or *may void your warranty*.
+Using and/or implementing information in this document *might brick your device*, *render it unfunctional*, *change behavior of any connected device* and/or *may void your warranty*. Any action taken upon information in this document is *strictly at your own risk*. *The author(s) are not liable* for any losses and damages in connection with the use of this document.
 
 The author is *not affiliated* to OSRAM Light AG in any way. Furthermore is this document *not official publicated or approved* by OSRAM Licht AG.
 
