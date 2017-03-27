@@ -37,7 +37,7 @@ String values are encoded using UTF-8 encoding and of fixed length. Unused bytes
 
 === Headers
 
-The protocol defines a common header for both requests and responses. The header consists of the packet's length, a packet type, the command id and a request id.
+The protocol defines a common header for both requests and responses. The header consists of the packet's length, a packet type and the command id.
 
 Furthermore the header contains a request id which is recommended, but not required, to be monotonly increasing but must wrapping around to startover when surpassing _0xFFFFFFFF_. The response will feature the same request id and can be used to correlate responses with requests.
 
