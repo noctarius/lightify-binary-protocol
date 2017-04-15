@@ -108,16 +108,16 @@ A device type is sent with status updates to identify the type of the device as 
 | Id | Description
 
 | 1
-| Fixed white, dimmable
+| Fixed white, dimmable, non-softswitch
 
 | 2
-| Lightify bulb (TW), dimmable
+| Lightify bulb (TW), dimmable, soft-switchable
 
 | 4
-| Fixed white, dimmable
+| Fixed white, dimmable, soft-switchable
 
 | 10
-| Lightify bulb (RGBW), dimmable
+| Lightify bulb (RGBW), dimmable, soft-switchable
 
 | 16
 | Plug / Power socket
