@@ -21,7 +21,7 @@ All information in this document are collected using *reverse engineering practi
 
 Using and/or implementing information in this document *might brick your device*, *render it unfunctional*, *change behavior of any connected device* and/or *may void your warranty*. Any action taken upon information in this document is *strictly at your own risk*. *The author(s) are not liable* for any losses and damages in connection with the use of this document.
 
-The author is *not affiliated* to OSRAM Light AG in any way. Furthermore is this document *not official publicated or approved* by OSRAM Licht AG.
+The author(s) are *not affiliated* to OSRAM Light AG in any way. Furthermore is this document *not official publicated or approved* by OSRAM Licht AG.
 
 == Basics about the Protocol
 
