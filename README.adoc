@@ -108,7 +108,7 @@ A device type is sent with status updates to identify the type of the device as 
 | Id | Description
 
 | 1
-| Fixed white, non-dimmable
+| Fixed white, dimmable
 
 | 2
 | Lightify bulb (TW), dimmable
