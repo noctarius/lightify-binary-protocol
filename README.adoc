@@ -107,11 +107,17 @@ A device type is sent with status updates to identify the type of the device as 
 |===
 | Id | Description
 
+| 1
+| Fixed white, non-dimmable
+
 | 2
-| Lightify bulb (TW)
+| Lightify bulb (TW), dimmable
+
+| 4
+| Fixed white, dimmable
 
 | 10
-| Lightify bulb (RGBW)
+| Lightify bulb (RGBW), dimmable
 
 | 16
 | Plug / Power socket
@@ -120,10 +126,10 @@ A device type is sent with status updates to identify the type of the device as 
 | Motion Sensor
 
 | 64
-| Switch
+| Switch (2 switches)
 
 | 65
-| Switch
+| Switch (4 switches)
 
 |===
 
