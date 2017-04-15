@@ -108,16 +108,16 @@ A device type is sent with status updates to identify the type of the device as 
 | Id | Description
 
 | 1
-| Fixed white, dimmable, non-softswitch
+| Bulb: Fixed white, dimmable, non-softswitch
 
 | 2
-| Lightify bulb (TW), dimmable, soft-switchable
+| Bulb: Tunable white, dimmable, soft-switchable
 
 | 4
-| Fixed white, dimmable, soft-switchable
+| Bulb: Fixed white, dimmable, soft-switchable
 
 | 10
-| Lightify bulb (RGBW), dimmable, soft-switchable
+| Bulb: RGB, tunable white, dimmable, soft-switchable
 
 | 16
 | Plug / Power socket
@@ -132,31 +132,6 @@ A device type is sent with status updates to identify the type of the device as 
 | Switch (4 switches)
 
 |===
-
-So far it seems like there's a bitmask defining the capability of the devices. Some of the bits seem to be known by now.
-
-.Device Type Bitmask
-|===
-| Bits | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7
-
-| Capability
-| DM?
-| TW
-| -
-| RGB
-| -
-| MS
-| SW
-| -
-
-|===
-
-_Legend: +
-DM = Dimmer +
-TW = Tunable White +
-RGB = Change Color +
-MS = Motion Sensor +
-SW = Switching_
 
 == Device and Zone Addressing
 
