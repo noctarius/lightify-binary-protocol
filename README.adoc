@@ -1002,8 +1002,8 @@ Returns information about the requested device.
 | uint64_t: See <<Device address>>
 
 | 19
-| Unknown
-| uint8_t: ???
+| Online / Offline?
+| uint8_t: _0x00_ online, _0xFF_ offline
 
 | 20
 | Unknown
