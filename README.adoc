@@ -1043,6 +1043,8 @@ Returns information about the requested device.
 
 |===
 
+If the response packet's byte at index _19_ is _0xFF_ (the device is offline / non-reachable) the packet is only those 20 bytes, otherwise the full packet comes back.
+
 
 === PACKET_GET_WIFI_CONFIGURATION
 
