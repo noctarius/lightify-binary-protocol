@@ -833,7 +833,7 @@ Sets the luminance value of the addressed device or zone.
 | Byte(s) | Description | Data type
 
 | 9-10
-| Devide or zone id
+| Device or zone id
 | uint16_t
 
 | 11-18
@@ -861,7 +861,7 @@ Sets the power switch state of the addressed device or zone.
 | Byte(s) | Description | Data type
 
 | 9-10
-| WRONG:Devide or zone id??? Number of devices changed?
+| WRONG:Device or zone id??? Number of devices changed?
 | uint16_t
 
 | 11-18
@@ -893,7 +893,7 @@ Sets the white light temperature of the addressed device or zone between 2,000 a
 | Byte(s) | Description | Data type
 
 | 9-10
-| Devide or zone id
+| Device or zone id
 | uint16_t
 
 | 11-18
@@ -937,7 +937,7 @@ Sets the RGB color value of the addressed device or zone.
 | Byte(s) | Description | Data type
 
 | 9-10
-| Devide or zone id
+| Device or zone id
 | uint16_t
 
 | 11-18
@@ -965,7 +965,7 @@ Activates a predefined scene on the addressed device or zone.
 | Byte(s) | Description | Data type
 
 | 9-10
-| Devide or zone id
+| Device or zone id
 | uint16_t
 
 | 11-18
