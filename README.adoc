@@ -267,17 +267,17 @@ Known command ids are put into the following list:
 | ???
 
 | _0x20_
-| Add to Zone
+| Add Device to Zone
 | DEVICE?
 | ???
 
 | _0x21_
-| Remove from Zone
+| Remove Device from Zone
 | DEVICE?
 | ???
 
 | _0x26_
-| Get zone information
+| Get Zone information
 | ZONE
 | <<PACKET_GET_ZONE_INFO>>
 
@@ -287,8 +287,8 @@ Known command ids are put into the following list:
 | ???
 
 | _0x28_
-| Unknown, wrong addressing
-| ZONE?, DEVICE?
+| Set Device name
+| DEVICE?
 | ???
 
 | _0x29_
@@ -567,8 +567,8 @@ Known command ids are put into the following list:
 | ???
 
 | _0xDD_
-| Remove all scenes from zone?
-| ZONE?
+| Remove all scenes and groups
+| ZONE?, BROADCAST?
 | ???
 
 | _0xD0_
@@ -588,7 +588,7 @@ Known command ids are put into the following list:
 
 
 | _0xE3_
-| Get Wifi Configuration
+| Get / Scan / Set  Wifi Configuration
 | BROADCAST
 | <<PACKET_GET_WIFI_CONFIGURATION>>
 
