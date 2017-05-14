@@ -54,7 +54,7 @@ Furthermore the header contains a request id which is recommended, but not requi
 | uint8_t: enum { +
   _0x00_: Light Device +
   _0x01_: Device response? +
-  _0x02_: Broadcast +
+  _0x02_: Broadcast / Zone Command +
   _0x03_: Zone Response? +
 }
 
@@ -189,6 +189,8 @@ Zones are identified by their zone id. Addressing itself, however, is still usin
 | uint8_t[6]: _0x00_
 
 |===
+
+*Attention:* Also note, that zone commands have a packet type of _0x02_ at byte position _2_ in the packet's header.
 
 == Lightify Gateway Discovery
 
