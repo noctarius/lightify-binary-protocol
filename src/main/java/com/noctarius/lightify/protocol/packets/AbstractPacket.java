@@ -1,7 +1,7 @@
 package com.noctarius.lightify.protocol.packets;
 
-import com.noctarius.lightify.protocol.Command;
 import com.noctarius.lightify.protocol.Address;
+import com.noctarius.lightify.protocol.Command;
 import com.noctarius.lightify.protocol.Packet;
 import com.noctarius.lightify.protocol.Status;
 
@@ -10,7 +10,8 @@ import java.nio.charset.Charset;
 
 import static com.noctarius.lightify.protocol.LightifyUtils.readDeviceFirmware;
 
-public abstract class AbstractPacket implements Packet {
+public abstract class AbstractPacket
+        implements Packet {
 
     private static final Charset UTF8 = Charset.forName("UTF-8");
 
@@ -122,7 +123,8 @@ public abstract class AbstractPacket implements Packet {
         short blue = (short) Byte.toUnsignedInt(buffer.get());
         short alpha = (short) Byte.toUnsignedInt(buffer.get());
         String name = readString(24, buffer);
-        return new Device(deviceId, address, type, firmware, zoneId, on, luminance, temperature, red, green, blue, alpha, name);
+        return new Device(deviceId, address, type, firmware, zoneId, on, luminance, temperature,
+                red, green, blue, alpha, name, true);
     }
 
     public static final class Device {
@@ -139,9 +141,10 @@ public abstract class AbstractPacket implements Packet {
         private final short blue;
         private final short alpha;
         private final String name;
+        private final boolean reachable;
 
         private Device(int deviceId, Address address, byte type, String firmware, int zoneId, boolean on, short luminance,
-                      int temperature, short red, short green, short blue, short alpha, String name) {
+                       int temperature, short red, short green, short blue, short alpha, String name, boolean reachable) {
 
             this.deviceId = deviceId;
             this.address = address;
@@ -156,6 +159,7 @@ public abstract class AbstractPacket implements Packet {
             this.blue = blue;
             this.alpha = alpha;
             this.name = name;
+            this.reachable = reachable;
         }
 
         public int getDeviceId() {
@@ -210,6 +214,10 @@ public abstract class AbstractPacket implements Packet {
             return name;
         }
 
+        public boolean isReachable() {
+            return reachable;
+        }
+
         @Override
         public boolean equals(Object o) {
             if (this == o) {
@@ -251,6 +259,9 @@ public abstract class AbstractPacket implements Packet {
             if (alpha != device.alpha) {
                 return false;
             }
+            if (reachable != device.reachable) {
+                return false;
+            }
             if (address != null ? !address.equals(device.address) : device.address != null) {
                 return false;
             }
@@ -275,6 +286,7 @@ public abstract class AbstractPacket implements Packet {
             result = 31 * result + (int) blue;
             result = 31 * result + (int) alpha;
             result = 31 * result + (name != null ? name.hashCode() : 0);
+            result = 31 * result + (reachable ? 1 : 0);
             return result;
         }
 
@@ -283,7 +295,7 @@ public abstract class AbstractPacket implements Packet {
             return "Device{" + "deviceId=" + deviceId + ", address=" + address + ", type=" + type + ", firmware='" + firmware
                     + '\'' + ", zoneId=" + zoneId + ", on=" + on + ", luminance=" + luminance + ", temperature=" + temperature
                     + ", red=" + red + ", green=" + green + ", blue=" + blue + ", alpha=" + alpha + ", name='" + name + '\''
-                    + '}';
+                    + ", reachable=" + reachable + '}';
         }
     }
 

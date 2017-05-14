@@ -6,7 +6,7 @@ public class Test2 {
 
     public static void main(String[] args)
             throws Exception {
-        LightifyLink link = new LightifyLink("172.25.100.141");
+        LightifyLink link = new LightifyLink("172.25.100.141", null);
         link.performSearch((device) -> {
             if (device instanceof Switchable) {
                 Switchable switchable = (Switchable) device;

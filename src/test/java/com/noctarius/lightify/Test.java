@@ -16,7 +16,7 @@ public class Test {
         //for (int i = 0xd4; i < 0xe0; i++) {
         int i = 0xe3;
             try {                                                 //"172.25.100.141"  192.168.10.1
-                LightifyLink link = new LightifyLink("172.25.100.141");
+                LightifyLink link = new LightifyLink("172.25.100.141", null);
 
                 /*ByteBuffer buffer = ByteBuffer.allocate(125).order(ByteOrder.LITTLE_ENDIAN);
                 buffer.put((byte) 1); // set wifi

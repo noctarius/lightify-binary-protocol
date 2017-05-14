@@ -1,5 +1,6 @@
 package com.noctarius.lightify.protocol;
 
+import com.noctarius.lightify.StatusListener;
 import com.noctarius.lightify.model.Addressable;
 import com.noctarius.lightify.model.ColorLight;
 import com.noctarius.lightify.model.DimmableLight;
@@ -51,8 +52,10 @@ public final class Lightify {
     private final SocketHandler socketHandler;
     private final ScheduledExecutorService scheduler;
     private final PacketFactory packetFactory;
+    private final StatusListener statusListener;
 
-    public Lightify(InetAddress address) {
+    public Lightify(InetAddress address, StatusListener statusListener) {
+        this.statusListener = statusListener;
         this.packetFactory = new PacketFactory(this::nextSequence);
         this.scheduler = Executors.newSingleThreadScheduledExecutor(this::newThread);
         this.socketHandler = new SocketHandler(address);
@@ -205,21 +208,38 @@ public final class Lightify {
         @Override
         public void run() {
             while (!shutdown.get()) {
+                Socket socket = exceptional(() -> connect(), e -> {
+                    if (statusListener != null) {
+                        statusListener.onConnectionFailed();
+                    }
+                });
+
+                // Fire listener
+                if (statusListener != null) {
+                    statusListener.onConnectionEstablished();
+                }
+
                 try {
                     exceptional(() -> {
-                        Socket socket = connect();
                         OutputStream os = socket.getOutputStream();
                         InputStream is = socket.getInputStream();
                         selecting(is, os);
                     });
                 } catch (RuntimeException e) {
+                    // Make sure the socket is closed
+                    exceptional(() -> socket.close(), Exception::printStackTrace);
+
+                    // Fire listener if registered
+                    if (statusListener != null) {
+                        statusListener.onConnectionLost();
+                    }
+
                     e.printStackTrace();
                 }
             }
         }
 
-        private void selecting(InputStream is, OutputStream os)
-                throws IOException {
+        private void selecting(InputStream is, OutputStream os) throws IOException {
             boolean requestOngoing = false;
             while (!shutdown.get()) {
                 if (!requestOngoing) {
@@ -245,16 +265,14 @@ public final class Lightify {
             }
         }
 
-        private ByteBuffer send(ByteBuffer lastRequest, OutputStream os)
-                throws IOException {
+        private ByteBuffer send(ByteBuffer lastRequest, OutputStream os) throws IOException {
             //System.out.println("Sending packet...");
             os.write(lastRequest.array());
             os.flush();
             return null;
         }
 
-        private boolean read(InputStream is)
-                throws IOException {
+        private boolean read(InputStream is) throws IOException {
             int readable = Math.min(buffer.remaining(), is.available());
             if (readable > 0) {
                 int read = is.read(buffer.array(), buffer.position(), readable);
@@ -284,8 +302,10 @@ public final class Lightify {
             return true; // request ongoing
         }
 
-        private Socket connect()
-                throws IOException {
+        private Socket connect() throws IOException {
+            if (statusListener != null) {
+                statusListener.onConnect();
+            }
             return new Socket(address, 4000);
         }
     }

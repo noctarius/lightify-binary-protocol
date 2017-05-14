@@ -1,9 +1,9 @@
 package com.noctarius.lightify.protocol;
 
 import javax.jmdns.ServiceInfo;
-import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.util.concurrent.Callable;
+import java.util.function.Consumer;
 
 public final class LightifyUtils {
 
@@ -38,22 +38,36 @@ public final class LightifyUtils {
     }
 
     public static <R> R exceptional(Callable<R> callable) {
+        return exceptional(callable, (e) -> {
+            throw new RuntimeException(e);
+        });
+    }
+
+    public static <R> R exceptional(Callable<R> callable, Consumer<Exception> exceptionConsumer) {
         try {
             return callable.call();
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            exceptionConsumer.accept(e);
+            throw new RuntimeException(e); // if the consumer does not throw an exception, we'll do it here
         }
     }
 
     public static void exceptional(Exceptional exceptional) {
+        exceptional(exceptional, (e) -> {
+            throw new RuntimeException(e);
+        });
+    }
+
+    public static void exceptional(Exceptional exceptional, Consumer<Exception> exceptionConsumer) {
         try {
             exceptional.call();
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            exceptionConsumer.accept(e);
         }
     }
 
     public interface Exceptional {
-        void call() throws Exception;
+        void call()
+                throws Exception;
     }
 }

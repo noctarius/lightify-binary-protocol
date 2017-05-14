@@ -27,8 +27,8 @@ public class LightifyLink {
 
     private final Lightify lightify;
 
-    public LightifyLink(String address) {
-        this.lightify = exceptional(() -> new Lightify(InetAddress.getByName(address)));
+    public LightifyLink(String address, StatusListener statusListener) {
+        this.lightify = exceptional(() -> new Lightify(InetAddress.getByName(address), statusListener));
     }
 
     public Device findDevice(String address) {
@@ -40,21 +40,14 @@ public class LightifyLink {
     }
 
     public void performSearch(Consumer<Device> consumer) {
-        lightify.devices((response) -> {
-            for (AbstractPacket.Device d : response.getDevices()) {
-                Device device = LightifyModel.createLightifyDevice(d);
-                if (device != null) {
-                    String address = DatatypeConverter.printHexBinary(d.getAddress().getAddress());
-                    devices.put(address, device);
-                    consumer.accept(device);
-                }
-            }
-
-            performZoneSearch(consumer);
-        });
+        performDeviceSearch(consumer, () -> performZoneSearch(consumer));
     }
 
-    private void performZoneSearch(Consumer<Device> consumer) {
+    public void performDeviceSearch(Consumer<Device> consumer) {
+        performDeviceSearch(consumer, null);
+    }
+
+    public void performZoneSearch(Consumer<Device> consumer) {
         lightify.zones((response) -> {
             for (AbstractPacket.Zone z : response.getZones()) {
                 Zone zone = LightifyModel.createLightifyZone(z);
@@ -74,11 +67,14 @@ public class LightifyLink {
         });
     }
 
-    void performSwitch(Switchable switchable, boolean activate, Consumer<Switchable> consumer) {
+    public void performSwitch(Switchable switchable, boolean activate, Consumer<Switchable> consumer) {
         performSwitch(switchable, activate, 0, consumer);
     }
 
-    void performSwitch(Switchable switchable, boolean activate, int millis, Consumer<Switchable> consumer) {
+    public void performSwitch(Switchable switchable, boolean activate, int millis, Consumer<Switchable> consumer) {
+        if (millis > 65335) {
+            throw new IllegalArgumentException("millis cannot be larger than 65535");
+        }
         boolean softswitch = false;
         if (switchable instanceof Luminary) {
             softswitch = millis > 0 && ((Luminary) switchable).hasCapability(Capability.SoftSwitchable);
@@ -96,7 +92,10 @@ public class LightifyLink {
         }
     }
 
-    void performLuminance(Luminary luminary, byte luminance, short millis, Consumer<Luminary> consumer) {
+    public void performLuminance(Luminary luminary, byte luminance, int millis, Consumer<Luminary> consumer) {
+        if (millis > 65335) {
+            throw new IllegalArgumentException("millis cannot be larger than 65535");
+        }
         if (luminary.hasCapability(Capability.Dimmable)) {
             DimmableLight light = luminary.asDimmableLight();
             lightify.luminance(light, luminance, millis, (response) -> {
@@ -106,7 +105,7 @@ public class LightifyLink {
         }
     }
 
-    void performRGB(Luminary luminary, int red, int green, int blue, int millis, Consumer<Luminary> consumer) {
+    public void performRGB(Luminary luminary, int red, int green, int blue, int millis, Consumer<Luminary> consumer) {
         if (red > 255 || red < 0) {
             throw new IllegalArgumentException("red must be in range [0..255]");
         }
@@ -131,7 +130,7 @@ public class LightifyLink {
         }
     }
 
-    void performTemperature(Luminary luminary, int temperature, int millis, Consumer<Luminary> consumer) {
+    public void performTemperature(Luminary luminary, int temperature, int millis, Consumer<Luminary> consumer) {
         if (luminary.hasCapability(Capability.TunableWhite)) {
             TunableWhiteLight light = luminary.asTunableWhiteLight();
             lightify.temperature(light, temperature, millis, (response) -> {
@@ -141,7 +140,7 @@ public class LightifyLink {
         }
     }
 
-    void performZoneInfo(Zone zone, Consumer<Device> consumer) {
+    public void performZoneInfo(Zone zone, Consumer<Device> consumer) {
         lightify.zoneInfo(zone, (response) -> {
             zone.update(response);
             consumer.accept(zone);
@@ -150,6 +149,23 @@ public class LightifyLink {
 
     public void disconnect() {
         lightify.dispose();
+    }
+
+    private void performDeviceSearch(Consumer<Device> consumer, Runnable finishAction) {
+        lightify.devices((response) -> {
+            for (AbstractPacket.Device d : response.getDevices()) {
+                Device device = LightifyModel.createLightifyDevice(d);
+                if (device != null) {
+                    String address = DatatypeConverter.printHexBinary(d.getAddress().getAddress());
+                    devices.put(address, device);
+                    consumer.accept(device);
+                }
+            }
+
+            if (finishAction != null) {
+                finishAction.run();
+            }
+        });
     }
 
     private String getZoneUID(int zoneId) {

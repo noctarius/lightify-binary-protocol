@@ -25,6 +25,7 @@ public class PowerSocket
 
     @Override
     public void update(GetDeviceInfoResponse deviceUpdate) {
+        super.update(deviceUpdate);
         this.on = deviceUpdate.isOn();
     }
 

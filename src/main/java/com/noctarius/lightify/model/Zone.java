@@ -24,10 +24,6 @@ public class Zone
         return zoneId;
     }
 
-    @Override
-    public void update(GetDeviceInfoResponse deviceUpdate) {
-    }
-
     public void update(GetZoneInfoResponse zoneUpdate) {
         List<Address> addresses = new ArrayList<>();
         zoneUpdate.getDevices().forEach(addresses::add);

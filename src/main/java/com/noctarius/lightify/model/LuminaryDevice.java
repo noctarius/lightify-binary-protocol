@@ -127,6 +127,7 @@ public class LuminaryDevice
 
     @Override
     public void update(GetDeviceInfoResponse deviceUpdate) {
+        super.update(deviceUpdate);
         this.on = deviceUpdate.isOn();
         this.luminance = deviceUpdate.getLuminance();
         this.red = deviceUpdate.getRed();

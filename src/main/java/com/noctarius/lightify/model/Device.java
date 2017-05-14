@@ -10,6 +10,8 @@ public abstract class Device
     private final String firmware;
     private final String name;
 
+    private boolean reachable;
+
     protected Device(Address address, String firmware, String name) {
         this.address = address;
         this.firmware = firmware;
@@ -29,7 +31,13 @@ public abstract class Device
         return name;
     }
 
-    public abstract void update(GetDeviceInfoResponse deviceUpdate);
+    public boolean isReachable() {
+        return reachable;
+    }
+
+    public void update(GetDeviceInfoResponse deviceUpdate) {
+        this.reachable = deviceUpdate.getReachable() == 0x00;
+    }
 
     @Override
     public boolean equals(Object o) {
