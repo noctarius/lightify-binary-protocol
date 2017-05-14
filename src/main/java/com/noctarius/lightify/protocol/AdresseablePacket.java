@@ -1,4 +1,6 @@
 package com.noctarius.lightify.protocol;
 
-public class AdresseablePacket {
+public interface AdresseablePacket extends WritablePacket {
+
+    Address getAddress();
 }

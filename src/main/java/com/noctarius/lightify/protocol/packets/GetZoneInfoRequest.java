@@ -1,20 +1,11 @@
 package com.noctarius.lightify.protocol.packets;
 
-import com.noctarius.lightify.Command;
+import com.noctarius.lightify.protocol.Command;
+import com.noctarius.lightify.protocol.Address;
 
-import java.nio.ByteBuffer;
+public final class GetZoneInfoRequest extends AbstractAddressableRequest {
 
-public class GetZoneInfoRequestPacket extends AbstractAddressablePacket {
-
-    protected GetZoneInfoRequestPacket(int zoneId, int packetLength, Command command, long requestId) {
-        super(zoneId, packetLength, command, requestId);
-    }
-
-    protected GetZoneInfoRequestPacket(ByteBuffer buffer) {
-        super(buffer);
-    }
-
-    @Override
-    protected void writePayload(ByteBuffer buffer) {
+    public GetZoneInfoRequest(Address address, long requestId) {
+        super(address, 0, Command.ZONE_INFO, requestId);
     }
 }

@@ -1,4 +1,8 @@
 package com.noctarius.lightify.protocol;
 
-public interface ReadablePacket {
+import java.util.function.Consumer;
+
+public interface ReadablePacket extends Packet {
+
+    void accept(Consumer<? super ReadablePacket> handler);
 }

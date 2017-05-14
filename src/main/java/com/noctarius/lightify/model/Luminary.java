@@ -2,20 +2,29 @@ package com.noctarius.lightify.model;
 
 import com.noctarius.lightify.protocol.Address;
 
-public abstract class LightifyLuminary extends LightifyDevice implements Switchable {
+import java.util.Set;
 
-    private boolean on;
+public interface Luminary
+        extends Addressable {
 
-    protected LightifyLuminary(boolean on, Address address) {
-        super(address);
-        this.on = on;
-    }
+    Address getAddress();
 
-    public boolean isOn() {
-        return on;
-    }
+    String getName();
 
-    public void setOn(boolean on) {
-        this.on = on;
-    }
+    String getFirmware();
+
+    boolean isOn();
+
+    Set<Capability> getCapabilities();
+
+    boolean hasCapability(Capability capability);
+
+    DimmableLight asDimmableLight();
+
+    ColorLight asColorLight();
+
+    TunableWhiteLight asTunableWhiteLight();
+
+    Switchable asSwitchable();
+
 }

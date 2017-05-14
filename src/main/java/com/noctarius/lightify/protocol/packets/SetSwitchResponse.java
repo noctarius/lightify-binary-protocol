@@ -2,9 +2,9 @@ package com.noctarius.lightify.protocol.packets;
 
 import java.nio.ByteBuffer;
 
-public final class SetLuminanceResponse extends AbstractLightResponse {
+public final class SetSwitchResponse extends AbstractLightResponse {
 
-    SetLuminanceResponse(ByteBuffer buffer) {
+    SetSwitchResponse(ByteBuffer buffer) {
         super(buffer);
     }
 }

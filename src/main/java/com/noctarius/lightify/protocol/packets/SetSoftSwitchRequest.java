@@ -5,28 +5,24 @@ import com.noctarius.lightify.protocol.Address;
 
 import java.nio.ByteBuffer;
 
-public final class SetTemperatureRequest extends AbstractAddressableRequest {
+public final class SetSoftSwitchRequest
+        extends AbstractAddressableRequest {
 
-    private final int temperature;
+    private final boolean on;
     private final int millis;
 
-    SetTemperatureRequest(int temperature, int millis, Address address, long requestId) {
-        super(address, 4, Command.LIGHT_TEMPERATURE, requestId);
-        this.temperature = temperature;
+    SetSoftSwitchRequest(boolean on, int millis, Address address, long requestId) {
+        super(address, 2, on ? Command.LIGHT_SOFT_SWITCH_ON : Command.LIGHT_SOFT_SWITCH_OFF, requestId);
+        this.on = on;
         this.millis = millis;
     }
 
-    public int getTemperature() {
-        return temperature;
-    }
-
-    public int getMillis() {
-        return millis;
+    public boolean isOn() {
+        return on;
     }
 
     @Override
     protected void writePayload(ByteBuffer buffer) {
-        buffer.putShort((short) temperature);
         buffer.putShort((short) millis);
     }
 
@@ -35,16 +31,16 @@ public final class SetTemperatureRequest extends AbstractAddressableRequest {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof SetTemperatureRequest)) {
+        if (!(o instanceof SetSoftSwitchRequest)) {
             return false;
         }
         if (!super.equals(o)) {
             return false;
         }
 
-        SetTemperatureRequest that = (SetTemperatureRequest) o;
+        SetSoftSwitchRequest that = (SetSoftSwitchRequest) o;
 
-        if (temperature != that.temperature) {
+        if (on != that.on) {
             return false;
         }
         return millis == that.millis;
@@ -53,7 +49,7 @@ public final class SetTemperatureRequest extends AbstractAddressableRequest {
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + temperature;
+        result = 31 * result + (on ? 1 : 0);
         result = 31 * result + millis;
         return result;
     }

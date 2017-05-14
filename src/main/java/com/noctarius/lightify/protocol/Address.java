@@ -1,10 +1,10 @@
-package com.noctarius.lightify.protocol.model;
+package com.noctarius.lightify.protocol;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
 
-import static com.noctarius.lightify.LightifyUtils.toHexMac;
+import static com.noctarius.lightify.protocol.LightifyUtils.toHexMac;
 
 public final class Address {
 

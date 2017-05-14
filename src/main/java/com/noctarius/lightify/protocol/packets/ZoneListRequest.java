@@ -1,17 +1,13 @@
 package com.noctarius.lightify.protocol.packets;
 
-import com.noctarius.lightify.Command;
+import com.noctarius.lightify.protocol.Command;
 
 import java.nio.ByteBuffer;
 
-public class ZoneListRequestPacket extends AbstractBroadcastPacket {
+public final class ZoneListRequest extends AbstractBroadcastRequest {
 
-    protected ZoneListRequestPacket(long requestId) {
+    ZoneListRequest(long requestId) {
         super(0, Command.ZONE_LIST, requestId);
-    }
-
-    protected ZoneListRequestPacket(ByteBuffer buffer) {
-        super(buffer);
     }
 
     @Override

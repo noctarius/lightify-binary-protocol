@@ -1,5 +1,7 @@
 package com.noctarius.lightify;
 
+import com.noctarius.lightify.protocol.LightifyUtils;
+
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceInfo;
 
