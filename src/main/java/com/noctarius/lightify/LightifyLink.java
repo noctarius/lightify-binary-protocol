@@ -74,18 +74,24 @@ public class LightifyLink {
         });
     }
 
-    void performSwitch(Luminary luminary, boolean activate, Consumer<Luminary> consumer) {
-        if (luminary.hasCapability(Capability.SoftSwitchable)) {
-            Switchable switchable = luminary.asSwitchable();
-            lightify.softSwitch(switchable, activate, 200, (response) -> {
+    void performSwitch(Switchable switchable, boolean activate, Consumer<Switchable> consumer) {
+        performSwitch(switchable, activate, 0, consumer);
+    }
+
+    void performSwitch(Switchable switchable, boolean activate, int millis, Consumer<Switchable> consumer) {
+        boolean softswitch = false;
+        if (switchable instanceof Luminary) {
+            softswitch = millis > 0 && ((Luminary) switchable).hasCapability(Capability.SoftSwitchable);
+        }
+        if (softswitch) {
+            lightify.softSwitch(switchable, activate, millis, (response) -> {
                 switchable.setOn(activate);
-                consumer.accept(luminary);
+                consumer.accept(switchable);
             });
         } else {
-            Switchable switchable = luminary.asSwitchable();
             lightify.hardSwitch(switchable, activate, (response) -> {
                 switchable.setOn(activate);
-                consumer.accept(luminary);
+                consumer.accept(switchable);
             });
         }
     }
@@ -100,19 +106,32 @@ public class LightifyLink {
         }
     }
 
-    void performRGB(Luminary luminary, byte r, byte g, byte b, short millis, Consumer<Luminary> consumer) {
+    void performRGB(Luminary luminary, int red, int green, int blue, int millis, Consumer<Luminary> consumer) {
+        if (red > 255 || red < 0) {
+            throw new IllegalArgumentException("red must be in range [0..255]");
+        }
+        if (green > 255 || green < 0) {
+            throw new IllegalArgumentException("green must be in range [0..255]");
+        }
+        if (blue > 255 || blue < 0) {
+            throw new IllegalArgumentException("blue must be in range [0..255]");
+        }
+        if (millis > 65335) {
+            throw new IllegalArgumentException("millis cannot be larger than 65535");
+        }
+
         if (luminary.hasCapability(Capability.RGB)) {
             ColorLight light = luminary.asColorLight();
-            lightify.rgb(light, r, g, b, millis, (response) -> {
-                light.setRed(r);
-                light.setGreen(g);
-                light.setBlue(b);
+            lightify.rgb(light, (short) red, (short) green, (short) blue, millis, (response) -> {
+                light.setRed((short) red);
+                light.setGreen((short) green);
+                light.setBlue((short) blue);
                 consumer.accept(luminary);
             });
         }
     }
 
-    void performTemperature(Luminary luminary, short temperature, short millis, Consumer<Luminary> consumer) {
+    void performTemperature(Luminary luminary, int temperature, int millis, Consumer<Luminary> consumer) {
         if (luminary.hasCapability(Capability.TunableWhite)) {
             TunableWhiteLight light = luminary.asTunableWhiteLight();
             lightify.temperature(light, temperature, millis, (response) -> {

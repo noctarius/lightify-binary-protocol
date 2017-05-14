@@ -1,10 +1,18 @@
 package com.noctarius.lightify;
 
+import com.noctarius.lightify.model.Switchable;
+
 public class Test2 {
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args)
+            throws Exception {
         LightifyLink link = new LightifyLink("172.25.100.141");
-        link.performSearch(System.out::println);
+        link.performSearch((device) -> {
+            if (device instanceof Switchable) {
+                Switchable switchable = (Switchable) device;
+                link.performSwitch(switchable, false, System.out::println);
+            }
+        });
     }
 
     private static void sleep(int millis) {

@@ -69,7 +69,7 @@ public final class LightifyModel {
         }
 
         if (type == 2 || type == 4 || type == 10) {
-            capabilities.add(Capability.SoftSwitchable);
+            // capabilities.add(Capability.SoftSwitchable); <-- doesn't seem to work yet, packet broken?
         }
 
         if (type == 10) {
