@@ -9,8 +9,11 @@ import com.noctarius.lightify.model.Luminary;
 import com.noctarius.lightify.model.Switchable;
 import com.noctarius.lightify.model.TunableWhiteLight;
 import com.noctarius.lightify.model.Zone;
+import com.noctarius.lightify.protocol.Address;
 import com.noctarius.lightify.protocol.Lightify;
 import com.noctarius.lightify.protocol.packets.AbstractPacket;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.DatatypeConverter;
 import java.net.InetAddress;
@@ -21,6 +24,8 @@ import java.util.function.Consumer;
 import static com.noctarius.lightify.protocol.LightifyUtils.exceptional;
 
 public class LightifyLink {
+
+    private final Logger logger = LoggerFactory.getLogger(Lightify.class);
 
     private final Map<String, Device> devices = new ConcurrentHashMap<>();
     private final Map<String, Zone> zones = new ConcurrentHashMap<>();
@@ -35,8 +40,8 @@ public class LightifyLink {
         return devices.get(address);
     }
 
-    public Zone findZone(String zoneId) {
-        return zones.get(zoneId);
+    public Zone findZone(String address) {
+        return zones.get(address);
     }
 
     public void performSearch(Consumer<Device> consumer) {
@@ -51,11 +56,10 @@ public class LightifyLink {
         lightify.zones((response) -> {
             for (AbstractPacket.Zone z : response.getZones()) {
                 Zone zone = LightifyModel.createLightifyZone(z);
-                if (zone != null) {
-                    String zoneId = getZoneUID(z.getZoneId());
-                    zones.put(zoneId, zone);
-                    performZoneInfo(zone, consumer);
-                }
+                String zoneId = zone.getAddress().toAddressCode();
+                logger.debug("Found zone: {}", zoneId);
+                zones.put(zoneId, zone);
+                performZoneInfo(zone, consumer);
             }
         });
     }
@@ -143,7 +147,9 @@ public class LightifyLink {
     public void performZoneInfo(Zone zone, Consumer<Device> consumer) {
         lightify.zoneInfo(zone, (response) -> {
             zone.update(response);
-            consumer.accept(zone);
+            if (consumer != null) {
+                consumer.accept(zone);
+            }
         });
     }
 
@@ -156,9 +162,13 @@ public class LightifyLink {
             for (AbstractPacket.Device d : response.getDevices()) {
                 Device device = LightifyModel.createLightifyDevice(d);
                 if (device != null) {
-                    String address = DatatypeConverter.printHexBinary(d.getAddress().getAddress());
+                    String address = d.getAddress().toAddressCode();
+                    logger.debug("Found device: {}", address);
                     devices.put(address, device);
-                    consumer.accept(device);
+
+                    if (consumer != null) {
+                        consumer.accept(device);
+                    }
                 }
             }
 
@@ -166,9 +176,5 @@ public class LightifyLink {
                 finishAction.run();
             }
         });
-    }
-
-    private String getZoneUID(int zoneId) {
-        return "zone::" + zoneId;
     }
 }

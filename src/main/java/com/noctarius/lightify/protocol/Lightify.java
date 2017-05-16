@@ -17,6 +17,8 @@ import com.noctarius.lightify.protocol.packets.SetSoftSwitchResponse;
 import com.noctarius.lightify.protocol.packets.SetSwitchResponse;
 import com.noctarius.lightify.protocol.packets.SetTemperatureResponse;
 import com.noctarius.lightify.protocol.packets.ZoneListResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
@@ -44,6 +46,8 @@ import java.util.function.Function;
 import static com.noctarius.lightify.protocol.LightifyUtils.exceptional;
 
 public final class Lightify {
+
+    private final Logger logger = LoggerFactory.getLogger(Lightify.class);
 
     private final Map<Long, CompletableFuture<ByteBuffer>> requestRegistry = new ConcurrentHashMap<>();
     private final Queue<ByteBuffer> sendQueue = new ArrayBlockingQueue<>(20);
@@ -241,6 +245,8 @@ public final class Lightify {
 
         private void selecting(InputStream is, OutputStream os) throws IOException {
             boolean requestOngoing = false;
+            long requestId = -1;
+
             while (!shutdown.get()) {
                 if (!requestOngoing) {
                     // Something to send?
@@ -249,6 +255,7 @@ public final class Lightify {
                     }
 
                     if (lastRequest != null) {
+                        requestId = extractRequestId(lastRequest);
                         lastRequest = send(lastRequest, os);
                         if (lastRequest == null) {
                             requestOngoing = true;
@@ -257,12 +264,23 @@ public final class Lightify {
                 }
 
                 if (requestOngoing) {
+                    // Request cancelled
+                    if (!requestRegistry.containsKey(requestId)) {
+                        logger.info("Request cancelled: {}", requestId);
+                        requestOngoing = false;
+                        continue;
+                    }
+
                     // Try reading
                     requestOngoing = read(is);
                 }
 
                 Thread.yield();
             }
+        }
+
+        private long extractRequestId(ByteBuffer lastRequest) {
+            return Integer.toUnsignedLong(lastRequest.getInt(4));
         }
 
         private ByteBuffer send(ByteBuffer lastRequest, OutputStream os) throws IOException {
@@ -282,7 +300,7 @@ public final class Lightify {
                 int packetLength = length + 2;
 
                 String debug = DatatypeConverter.printHexBinary(Arrays.copyOf(buffer.array(), buffer.position()));
-                //System.out.println("response: " + debug);
+                logger.trace("response: " + debug);
 
                 if (buffer.position() >= packetLength) {
                     ByteBuffer packet = newByteBuffer(packetLength);
@@ -306,6 +324,7 @@ public final class Lightify {
             if (statusListener != null) {
                 statusListener.onConnect();
             }
+            buffer.clear();
             return new Socket(address, 4000);
         }
     }

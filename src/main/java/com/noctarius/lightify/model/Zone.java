@@ -24,6 +24,10 @@ public class Zone
         return zoneId;
     }
 
+    public Iterable<Address> getAddresses() {
+        return Arrays.asList(addresses);
+    }
+
     public void update(GetZoneInfoResponse zoneUpdate) {
         List<Address> addresses = new ArrayList<>();
         zoneUpdate.getDevices().forEach(addresses::add);

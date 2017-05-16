@@ -38,6 +38,10 @@ public final class Address {
         return Arrays.hashCode(address);
     }
 
+    public String toAddressCode() {
+        return toString().replace(":", "");
+    }
+
     @Override
     public String toString() {
         return toHexMac(address);

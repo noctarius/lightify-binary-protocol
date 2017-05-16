@@ -1,6 +1,7 @@
 package com.noctarius.lightify.protocol;
 
 import javax.jmdns.ServiceInfo;
+import javax.xml.bind.DatatypeConverter;
 import java.nio.ByteBuffer;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
@@ -19,14 +20,7 @@ public final class LightifyUtils {
     }
 
     public static String toHexMac(byte[] address) {
-        StringBuilder sb = new StringBuilder(Integer.toHexString(Byte.toUnsignedInt(address[0])).toUpperCase()).append(":");
-        sb.append(Integer.toHexString(Byte.toUnsignedInt(address[1])).toUpperCase()).append(":");
-        sb.append(Integer.toHexString(Byte.toUnsignedInt(address[2])).toUpperCase()).append(":");
-        sb.append(Integer.toHexString(Byte.toUnsignedInt(address[3])).toUpperCase()).append(":");
-        sb.append(Integer.toHexString(Byte.toUnsignedInt(address[4])).toUpperCase()).append(":");
-        sb.append(Integer.toHexString(Byte.toUnsignedInt(address[5])).toUpperCase()).append(":");
-        sb.append(Integer.toHexString(Byte.toUnsignedInt(address[6])).toUpperCase()).append(":");
-        return sb.append(Integer.toHexString(Byte.toUnsignedInt(address[7])).toUpperCase()).toString();
+        return DatatypeConverter.printHexBinary(address);
     }
 
     public static boolean isLightifyGateway(ServiceInfo serviceInfo) {
