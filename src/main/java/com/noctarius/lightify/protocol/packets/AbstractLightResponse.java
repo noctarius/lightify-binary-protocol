@@ -10,11 +10,13 @@ public abstract class AbstractLightResponse extends AbstractPacket implements Re
 
     private final int id;
     private final Address address;
+    private final byte unk1;
 
     AbstractLightResponse(ByteBuffer buffer) {
         super(buffer);
         this.id = Short.toUnsignedInt(buffer.getShort());
         this.address = readAddress(buffer);
+        this.unk1 = buffer.get();
     }
 
     public int getId() {
@@ -23,6 +25,10 @@ public abstract class AbstractLightResponse extends AbstractPacket implements Re
 
     public Address getAddress() {
         return address;
+    }
+
+    public byte getUnk1() {
+        return unk1;
     }
 
     @Override

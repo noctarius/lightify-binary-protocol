@@ -1,17 +1,27 @@
 package com.noctarius.lightify;
 
 import com.noctarius.lightify.protocol.Command;
+import com.noctarius.lightify.protocol.packets.GetDeviceInfoResponse;
+import com.noctarius.lightify.protocol.packets.PacketFactory;
+import com.noctarius.lightify.protocol.packets.SetLuminanceResponse;
 
 import javax.xml.bind.DatatypeConverter;
+import java.lang.reflect.Constructor;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 public class GatewayPacketAnalyzer {
 
-    public static void main(String[] args) {
-        byte[] data = DatatypeConverter.parseHexBinary("002c000001960000000000010000000c02030320000c00000000000000000000080a0000010000000100000007");
-        ByteBuffer buffer = ByteBuffer.wrap(data);
+    public static void main(String[] args) throws Exception {
+        byte[] data = DatatypeConverter.parseHexBinary("1200013126000000000100A219A100AA3EB07C01");
+        ByteBuffer buffer = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN);
 
+        Constructor<SetLuminanceResponse> constructor = SetLuminanceResponse.class.getDeclaredConstructor(ByteBuffer.class);
+        constructor.setAccessible(true);
+        SetLuminanceResponse response = constructor.newInstance(buffer);
+        System.out.println(response);
+
+        buffer.position(0);
         System.out.println("Packet length (WORD): " + getWord(buffer));
 
         buffer.order(ByteOrder.LITTLE_ENDIAN);

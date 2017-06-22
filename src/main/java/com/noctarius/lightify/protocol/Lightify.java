@@ -61,7 +61,7 @@ public final class Lightify {
     public Lightify(InetAddress address, StatusListener statusListener) {
         this.statusListener = statusListener;
         this.packetFactory = new PacketFactory(this::nextSequence);
-        this.scheduler = Executors.newSingleThreadScheduledExecutor(this::newThread);
+        this.scheduler = Executors.newScheduledThreadPool(5, this::newThread);
         this.socketHandler = new SocketHandler(address);
         new Thread(socketHandler).start();
     }
@@ -124,8 +124,8 @@ public final class Lightify {
         long requestId = packet.getRequestId();
         ByteBuffer buffer = encode(packet);
 
-        Consumer<ByteBuffer> responseHandler = responseHandler((Consumer<ReadablePacket>) handler);
-        Function<Throwable, ? extends Void> exceptionHandler = exceptionHandler();
+        Consumer<ByteBuffer> responseHandler = responseHandler(requestId, (Consumer<ReadablePacket>) handler);
+        Function<Throwable, ? extends Void> exceptionHandler = exceptionHandler(requestId);
 
         CompletableFuture<ByteBuffer> requestPromise = requestPromise(requestId);
         CompletableFuture<ByteBuffer> timeout = timeoutPromise(requestId, 2, TimeUnit.MINUTES);
@@ -134,22 +134,36 @@ public final class Lightify {
         sendQueue.add(buffer);
     }
 
-    private Function<Throwable, ? extends Void> exceptionHandler() {
+    private Function<Throwable, ? extends Void> exceptionHandler(long requestId) {
         return throwable -> {
-            throwable.printStackTrace();
+            // Just to make sure the request is actually removed!
+            requestRegistry.remove(requestId);
+            logger.error("Error during send/receive", throwable);
             return null;
         };
     }
 
-    private Consumer<ByteBuffer> responseHandler(Consumer<ReadablePacket> handler) {
-        return buffer -> decode(buffer).accept(handler);
+    private Consumer<ByteBuffer> responseHandler(long requestId, Consumer<ReadablePacket> handler) {
+        return buffer -> {
+            logger.info("Decode request: {}", requestId);
+            try {
+                ReadablePacket packet = decode(buffer);
+                logger.info("Decoded packet for request {}={}", requestId, packet);
+                packet.accept(handler);
+            } catch (Exception e) {
+                logger.error("Error while decoding request: " + requestId, e);
+            }
+        };
     }
 
     private CompletableFuture<ByteBuffer> timeoutPromise(long requestId, int timeout, TimeUnit timeUnit) {
         CompletableFuture<ByteBuffer> promise = new CompletableFuture<>();
         scheduler.schedule(() -> {
-            requestRegistry.remove(requestId);
-            promise.completeExceptionally(new TimeoutException());
+            CompletableFuture<ByteBuffer> future = requestRegistry.remove(requestId);
+            if (future == promise) {
+                logger.warn("Timeout reached for request: {}", requestId);
+                promise.completeExceptionally(new TimeoutException());
+            }
         }, timeout, timeUnit);
         return promise;
     }
@@ -213,6 +227,7 @@ public final class Lightify {
         public void run() {
             while (!shutdown.get()) {
                 Socket socket = exceptional(() -> connect(), e -> {
+                    logger.error("Connecting failed", e);
                     if (statusListener != null) {
                         statusListener.onConnectionFailed();
                     }
@@ -229,26 +244,33 @@ public final class Lightify {
                         InputStream is = socket.getInputStream();
                         selecting(is, os);
                     });
-                } catch (RuntimeException e) {
+                } catch (Exception e) {
                     // Make sure the socket is closed
-                    exceptional(() -> socket.close(), Exception::printStackTrace);
+                    exceptional(() -> socket.close(), ex -> logger.error("Error while closing socket", ex));
 
                     // Fire listener if registered
                     if (statusListener != null) {
                         statusListener.onConnectionLost();
                     }
 
-                    e.printStackTrace();
+                    logger.error("Error in socket loop, connection closed", e);
                 }
             }
         }
 
-        private void selecting(InputStream is, OutputStream os) throws IOException {
+        private void selecting(InputStream is, OutputStream os) throws Exception {
             boolean requestOngoing = false;
             long requestId = -1;
 
+            int lastQueueSize = -1;
             while (!shutdown.get()) {
                 if (!requestOngoing) {
+                    int currentQueueSize = sendQueue.size();
+                    if (lastQueueSize != currentQueueSize) {
+                        logger.info("Request queue size: {}", currentQueueSize);
+                        lastQueueSize = currentQueueSize;
+                    }
+
                     // Something to send?
                     if (lastRequest == null) {
                         lastRequest = sendQueue.poll();
@@ -271,11 +293,12 @@ public final class Lightify {
                         continue;
                     }
 
+                    logger.debug("Request ongoing: {}", requestId);
                     // Try reading
                     requestOngoing = read(is);
                 }
 
-                Thread.yield();
+                Thread.sleep(100);
             }
         }
 
@@ -284,7 +307,8 @@ public final class Lightify {
         }
 
         private ByteBuffer send(ByteBuffer lastRequest, OutputStream os) throws IOException {
-            //System.out.println("Sending packet...");
+            long requestId = Integer.toUnsignedLong(lastRequest.getInt(4));
+            logger.info("Sending request {}", requestId);
             os.write(lastRequest.array());
             os.flush();
             return null;
@@ -300,7 +324,7 @@ public final class Lightify {
                 int packetLength = length + 2;
 
                 String debug = DatatypeConverter.printHexBinary(Arrays.copyOf(buffer.array(), buffer.position()));
-                logger.trace("response: " + debug);
+                logger.info("response: " + debug);
 
                 if (buffer.position() >= packetLength) {
                     ByteBuffer packet = newByteBuffer(packetLength);
@@ -310,8 +334,11 @@ public final class Lightify {
                     buffer.rewind();
 
                     long requestId = Integer.toUnsignedLong(packet.getInt(4));
+                    logger.info("Received response for request: {}", requestId);
+
                     CompletableFuture<ByteBuffer> promise = requestRegistry.remove(requestId);
                     if (promise != null) {
+                        logger.info("Handling response for request: {}", requestId);
                         promise.complete(packet);
                         return false; // request finished
                     }
@@ -321,6 +348,7 @@ public final class Lightify {
         }
 
         private Socket connect() throws IOException {
+            logger.info("Connecting to gateway");
             if (statusListener != null) {
                 statusListener.onConnect();
             }

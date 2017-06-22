@@ -30,7 +30,7 @@ public final class GetDeviceInfoResponse
         this.deviceId = Short.toUnsignedInt(buffer.getShort());
         this.address = readAddress(buffer);
         this.reachable = (short) Byte.toUnsignedInt(buffer.get());
-        if (reachable != 0x00) {
+        if (reachable == 0x00) {
             this.unk2 = (short) Byte.toUnsignedInt(buffer.get());
             this.on = buffer.get() != 0;
             this.luminance = (short) Byte.toUnsignedInt(buffer.get());
