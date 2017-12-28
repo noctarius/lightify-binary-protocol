@@ -81,7 +81,7 @@ _0x00_: No error? +
 _0x01_: Wrong (number of) parameter(s)? +
 _0x14_: ? +
 _0x15_: Command is not a broadcast? +
-_0x16_: ? +
+_0x16_: Resync required (gateway expects the next packet to be <<PACKET_LIST_PAIRED_DEVICES>>)
 _0xA7_: ? +
 _0x0B_: ? +
 _0xC2_: ? +
