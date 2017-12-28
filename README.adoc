@@ -688,10 +688,14 @@ Returns a list of all paired devices.
 | Device type?
 | uint8_t: See <<Device Types>>
 
-| 11-15
+| 11-14
 | Firmware version
 | uint8_t[5]: Translation into firmware version string -> +
-{%02d, uint8_t[0]}+{%02d, uint8_t[1]}+{%02d, uint8_t[2]}+uint8_t[3]+uint8_t[4]
+{%02d, uint8_t[0]}+{%02d, uint8_t[1]}+{%02d, uint8_t[2]}+uint8_t[3]
+
+| 15
+| Reachable
+| uint8_t: _0x00_ online, _0xFF_ offline
 
 | 16-17
 | Zone Id
@@ -702,7 +706,7 @@ Returns a list of all paired devices.
 | uint8_t: bool
 
 | 19
-| Luminance value
+| Luminance value / Battery value (Motion Detector)
 | uint8_t
 
 | 20-21
@@ -710,11 +714,11 @@ Returns a list of all paired devices.
 | uint16_t: _2,000_ >= x <= _6,500_
 
 | 22
-| Red value
+| Red value / Enabled value (Motion Detector)
 | uint8_t
 
 | 23
-| Green value
+| Green value / Triggered value (Motion Detector)
 | uint8_t
 
 | 24
@@ -725,9 +729,17 @@ Returns a list of all paired devices.
 | Alpha value
 | uint8_t: always? _0xFF_
 
-| 26-49
+| 26-41
 | Device name
-| uint8_t[24]: UTF-8 encoded, zero terminated string
+| uint8_t[16]: UTF-8 encoded, zero terminated string
+
+| 42-45
+| Time since last seen by gateway
+| uint32_t
+
+| 46-49
+| Joining?
+| uint32_t
 
 |===
 
@@ -1004,7 +1016,7 @@ Returns information about the requested device.
 | uint64_t: See <<Device address>>
 
 | 19
-| Online / Offline?
+| Reachable
 | uint8_t: _0x00_ online, _0xFF_ offline
 
 | 20
@@ -1016,7 +1028,7 @@ Returns information about the requested device.
 | uint8_t: bool
 
 | 22
-| Luminance value
+| Luminance value / Battery value (Motion Detector)
 | uint8_t
 
 | 23-24
@@ -1024,11 +1036,11 @@ Returns information about the requested device.
 | uint16_t: _2,000_ >= x <= _6,500_
 
 | 25
-| Red value
+| Red value / Enabled value (Motion Detector)
 | uint8_t
 
 | 26
-| Green value
+| Green value / Triggered value (Motion Detector)
 | uint8_t
 
 | 27
