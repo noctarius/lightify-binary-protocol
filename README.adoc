@@ -64,7 +64,7 @@ Furthermore the header contains a request id which is recommended, but not requi
 
 | 4-7
 | Unique, increasing request id
-| uint64_t
+| uint32_t
 
 |===
 
