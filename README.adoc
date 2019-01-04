@@ -264,9 +264,9 @@ Known command ids are put into the following list:
 | <<PACKET_LIST_ZONES>>
 
 | _0x1F_
-| Unknown, actual content returned (uint16_t(0,0))
-| BROADCAST?
-| ???
+| List defined scenes
+| BROADCAST
+| <<PACKET_LIST_SCENES>>
 
 | _0x20_
 | Add Device to Zone
@@ -340,7 +340,7 @@ Known command ids are put into the following list:
 
 | _0x52_
 | Activate scene
-| ZONE, DEVICE
+| BROADCAST
 | <<PACKET_ACTIVATE_SCENE>>
 
 | _0x53_
@@ -788,6 +788,56 @@ Returns a list of all configured zones.
 
 Assigned devices need to be discovered using <<PACKET_GET_ZONE_INFO>> after the zone id has been seen with this packet.
 
+=== PACKET_LIST_SCENES ===
+
+Returns a list of defined scenes.
+
+.Request data
+|===
+| Byte(s) | Description | Data type
+
+| -
+| No additional information to send
+| -
+
+|===
+
+.Response data
+|===
+| Byte(s) | Description | Data type
+
+| 0-1
+| Number of Scenes
+| uint16_t
+
+| ...20 bytes each scene
+| Scene information
+| See following table
+
+.Scene information
+|===
+| Byte(s) | Description | Data type
+
+| 0
+| Scene id
+| uint8_t
+
+| 1
+| Unknown, seems to always be 0x64 (@-sign)
+| uint8_t
+
+| 2-17
+| Scene name
+| uint8_t[16]: UTF-8 encoded, zero terminated string
+
+| 18-19
+| Unknown
+| uint16_t
+
+| 20
+| Next Scene id (chaining scenes?)
+| uint8_t
+
 === PACKET_GET_ZONE_INFO
 
 Returns information about the requested zone, including assigned devices.
@@ -968,9 +1018,9 @@ Activates a predefined scene on the addressed device or zone.
 |===
 | Byte(s) | Description | Data type
 
-| 16-17
+| 16
 | Scene id
-| uint16_t
+| uint8_t: 0x00 to 0x0F for the different predefined scenes
 
 |===
 
