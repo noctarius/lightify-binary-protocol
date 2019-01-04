@@ -814,6 +814,8 @@ Returns a list of defined scenes.
 | Scene information
 | See following table
 
+|===
+
 .Scene information
 |===
 | Byte(s) | Description | Data type
@@ -837,6 +839,8 @@ Returns a list of defined scenes.
 | 20
 | Next Scene id (chaining scenes?)
 | uint8_t
+
+|===
 
 === PACKET_GET_ZONE_INFO
 
